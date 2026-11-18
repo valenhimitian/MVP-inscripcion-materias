@@ -8,7 +8,7 @@
   display: inline-flex; align-items: center; justify-content: center; gap: var(--e2);
   border: 1px solid transparent; border-radius: var(--r-control);
   padding: 10px 18px; font-weight: 700; font-size: .95rem; cursor: pointer;
-  text-decoration: none; line-height: 1.2;
+  text-decoration: none; line-height: 1.2; white-space: nowrap;
   transition: background-color .15s, border-color .15s;
 }
 .btn-primario { background: var(--birome); color: #fff; }
@@ -22,12 +22,13 @@
 .btn-peligro-lleno { background: var(--err); color: #fff; }
 .btn-texto { background: none; border: 0; padding: 4px 0; color: var(--birome); font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .btn-chico { padding: 6px 12px; font-size: var(--t-sm); }
+.btn-largo { white-space: normal; text-align: left; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .acciones { display: flex; gap: var(--e2); flex-wrap: wrap; align-items: center; }
 .acciones.derecha { justify-content: flex-end; }
 
 /* Paneles */
-.panel { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-panel); padding: var(--e5); }
+.panel { min-width: 0; background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-panel); padding: var(--e5); }
 .panel + .panel { margin-top: var(--e4); }
 .panel-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--e3); margin-bottom: var(--e4); flex-wrap: wrap; }
 .panel-titulo p { color: var(--grafito); font-size: var(--t-sm); }
@@ -127,38 +128,71 @@ dialog.dialogo::backdrop { background: rgba(22, 33, 62, .45); }
 
 /* =====================================================================
    Grilla horaria semanal (elemento distintivo de la marca)
+   Las filas usan rem: si crece la letra o el panel, todo escala junto.
+   Las líneas de hora son celdas de la grilla, no un fondo aparte.
    ===================================================================== */
+.grilla-marco { container: grilla / inline-size; }
 .grilla {
-  --fila: 15px;
+  --fila: 1rem;
+  --cab: 2rem;
+  --col-hora: 3rem;
   display: grid;
-  grid-template-columns: 44px repeat(6, minmax(0, 1fr));
-  grid-template-rows: 30px repeat(28, var(--fila));
+  grid-template-columns: var(--col-hora) repeat(6, minmax(0, 1fr));
+  grid-template-rows: var(--cab) repeat(28, var(--fila));
   border: 1px solid var(--linea); border-radius: var(--r-control);
-  background:
-    linear-gradient(var(--linea-suave) 1px, transparent 1px) 0 30px / 100% calc(var(--fila) * 2);
-  position: relative; overflow: hidden;
+  background: var(--blanco);
+  overflow: hidden;
   font-size: var(--t-xs);
 }
-.grilla.compacta { --fila: 11px; }
-.grilla-dia { grid-row: 1; display: grid; place-items: center; font-weight: 700; color: var(--grafito); background: var(--papel); border-bottom: 1px solid var(--linea); border-left: 1px solid var(--linea-suave); }
+.grilla.compacta { --fila: .9rem; }
+@container grilla (min-width: 520px) { .grilla { --fila: 1.25rem; } .grilla.compacta { --fila: 1.05rem; } }
+@container grilla (min-width: 760px) { .grilla { --fila: 1.4rem; } }
+@container grilla (max-width: 380px) { .grilla { --col-hora: 2.4rem; } }
+
 .grilla-esquina { grid-row: 1; grid-column: 1; background: var(--papel); border-bottom: 1px solid var(--linea); }
-.grilla-hora { grid-column: 1; font-size: 10.5px; color: var(--grafito); text-align: right; padding-right: 6px; transform: translateY(-6px); }
+.grilla-dia {
+  grid-row: 1; display: grid; place-items: center;
+  font-weight: 700; color: var(--grafito); background: var(--papel);
+  border-bottom: 1px solid var(--linea); border-left: 1px solid var(--linea-suave);
+}
+.grilla-dia .dia-corto { display: none; }
+@container grilla (max-width: 340px) { .grilla-dia .dia-largo { display: none; } .grilla-dia .dia-corto { display: inline; } }
 .grilla-col { grid-row: 2 / -1; border-left: 1px solid var(--linea-suave); }
+.grilla-linea { grid-column: 2 / -1; align-self: start; border-top: 1px solid var(--linea-suave); }
+.grilla-linea.media { border-top: 1px dashed #EEF1F6; }
+/* La etiqueta va debajo de la línea de su hora, dentro de su fila: nunca pisa el encabezado */
+.grilla-hora {
+  grid-column: 1; align-self: start;
+  padding: 3px 6px 0 0; text-align: right;
+  font-size: 10.5px; line-height: 1; color: var(--grafito);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  border-top: 1px solid var(--linea-suave);
+}
+.grilla-hora.sin-texto { padding: 0; }
+.grilla-linea.primera, .grilla-hora.primera { border-top: 0; }
+
 .bloque {
-  margin: 1px 3px; border-radius: 6px; padding: 4px 6px;
-  overflow: hidden; line-height: 1.2; z-index: 1;
+  container: bloque / size;
+  margin: 1px 2px; border-radius: 6px; padding: 3px 5px;
+  overflow: hidden; min-width: 0; z-index: 1;
+  display: flex; flex-direction: column; gap: 1px;
   border: 1px solid transparent;
 }
-.bloque b { display: block; font-size: 11px; }
-.bloque span { font-size: 10px; opacity: .85; }
+.bloque b {
+  font-size: 11px; line-height: 1.2;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden; overflow-wrap: break-word; hyphens: auto;
+}
+.bloque span { font-size: 10px; line-height: 1.25; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@container bloque (min-height: 84px) { b { -webkit-line-clamp: 3; } }
+@container bloque (min-height: 120px) { b { -webkit-line-clamp: 4; } }
+@container bloque (max-height: 44px) { span { display: none; } }
+@container bloque (max-height: 30px) { b { -webkit-line-clamp: 1; } }
+@container bloque (max-width: 60px) { span { display: none; } b { font-size: 10px; } }
 .bloque.en-curso { background: var(--birome); color: #fff; }
 .bloque.aprobada { background: var(--birome-cl); color: var(--birome-osc); border-color: #BFCBFA; }
 .bloque.pendiente { background: repeating-linear-gradient(135deg, var(--resaltador-cl) 0 6px, #FFFBEA 6px 12px); color: var(--warn); border-color: #EFD78E; }
-.bloque.vista-previa {
-  background: var(--resaltador); color: var(--tinta);
-  border: 2px dashed var(--tinta);
-  animation: aparece .25s ease-out;
-}
+.bloque.vista-previa { background: var(--resaltador); color: var(--tinta); border: 2px dashed var(--tinta); animation: aparece .25s ease-out; }
 .bloque.choque { outline: 2px solid var(--err); outline-offset: -2px; }
 @keyframes aparece { from { transform: scale(.94); opacity: .3; } }
 .grilla-ref { display: flex; gap: var(--e4); flex-wrap: wrap; margin-top: var(--e3); font-size: var(--t-xs); color: var(--grafito); }

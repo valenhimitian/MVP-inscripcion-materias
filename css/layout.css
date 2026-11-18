@@ -37,6 +37,10 @@
 }
 .lateral a svg { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .lateral a:hover { background: var(--papel); }
+.lateral a > span { min-width: 0; }
+.menu-txt { display: grid; line-height: 1.25; }
+.menu-txt > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-txt small { font-size: var(--t-xs); font-weight: 400; color: var(--grafito); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lateral a[aria-current="page"] { background: var(--birome-cl); color: var(--birome-osc); }
 .lateral .contador { margin-left: auto; background: var(--resaltador); color: var(--tinta); font-size: var(--t-xs); border-radius: 999px; padding: 0 8px; font-weight: 700; }
 .lateral-pie { margin-top: auto; padding: var(--e4) var(--e3) 0; border-top: 1px solid var(--linea-suave); }
@@ -88,7 +92,8 @@
     border-right: 0; border-bottom: 1px solid var(--linea);
     position: sticky; top: var(--alto-barra); z-index: 20;
   }
-  .lateral a { white-space: nowrap; padding: 8px 12px; }
+  .lateral a { white-space: nowrap; padding: 8px 12px; max-width: 240px; flex: none; }
+  .menu-txt small { display: none; }
   .lateral-grupo, .lateral-pie { display: none; }
   .contenido { container: contenido / inline-size; padding: var(--e5) var(--e4) var(--e7); }
 }

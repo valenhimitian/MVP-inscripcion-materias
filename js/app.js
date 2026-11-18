@@ -141,7 +141,7 @@ const App = {
     const actual = location.hash;
     const items = [];
     const grupo = texto => items.push({ grupo: texto });
-    const enlace = (href, ico, texto, n) => items.push({ href, ico, texto, n });
+    const enlace = (href, ico, texto, n, sub) => items.push({ href, ico, texto, n, sub });
 
     if (s && s.rol === 'estudiante') {
       enlace('#/inicio', 'inicio', 'Inicio');
@@ -153,7 +153,7 @@ const App = {
       enlace('#/docente', 'inicio', 'Inicio');
       const vig = s.usuario.consultarComisiones().filter(c => VIGENTES.includes(c.estado));
       if (vig.length) grupo('Mis comisiones');
-      vig.forEach(c => enlace(`#/docente/comision/${c.id}`, 'cursada', `${c.materia.nombre} · ${c.codigo}`));
+      vig.forEach(c => enlace(`#/docente/comision/${c.id}`, 'cursada', c.materia.nombre, 0, `${c.codigo} · ${c.dia.slice(0, 3)} ${c.horaInicio}`));
       grupo('Cuenta');
       enlace('#/docente/notificaciones', 'campana', 'Notificaciones', Notificador.sinLeer(s.usuario));
       enlace('#/docente/perfil', 'perfil', 'Mi perfil');
@@ -172,7 +172,7 @@ const App = {
     const activo = items.filter(i => i.href && (actual === i.href || actual.startsWith(i.href + '/')))
       .sort((a, b) => b.href.length - a.href.length)[0];
     $('menu').innerHTML = items.map(i => i.grupo ? `<div class="lateral-grupo">${i.grupo}</div>`
-      : `<a href="${i.href}" ${i === activo ? 'aria-current="page"' : ''}>${icono(i.ico)}<span>${esc(i.texto)}</span>${i.n ? `<span class="contador">${i.n}</span>` : ''}</a>`).join('')
+      : `<a href="${i.href}" title="${esc(i.texto)}${i.sub ? ' · ' + esc(i.sub) : ''}" ${i === activo ? 'aria-current="page"' : ''}>${icono(i.ico)}<span class="menu-txt"><span>${esc(i.texto)}</span>${i.sub ? `<small>${esc(i.sub)}</small>` : ''}</span>${i.n ? `<span class="contador">${i.n}</span>` : ''}</a>`).join('')
       + (s ? `<div class="lateral-pie chico tenue">${PERIODO.nombre}<br>Inscripción hasta el ${fmtFechaLarga(PERIODO.cierreInscripcion)}</div>` : '');
   },
 

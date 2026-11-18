@@ -306,3 +306,12 @@ a.comision-card:hover { border-color: var(--tinta); }
 
 /* Guía */
 .guia-grupo { margin: var(--e5) 0 var(--e3); font-size: var(--t-md); color: var(--grafito); }
+
+
+/* =====================================================================
+   v2.1: los hijos de las grillas de página pueden achicarse (min-width: 0)
+   para que las tablas hagan scroll adentro y no ensanchen la página.
+   ===================================================================== */
+.inicio > *, .inscripcion > *, .dos-col > *, .tramites > *, .docente-notas > *,
+.docentes-layout > *, .tarjetas > *, .lado > *, .flujo > * { min-width: 0; }
+.tabla td .acciones { flex-wrap: nowrap; }

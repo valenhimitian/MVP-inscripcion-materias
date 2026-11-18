@@ -253,7 +253,7 @@ const PantallaInscripcion = {
       <p class="chico tenue">Visibles solo en modo demo.</p>
       <label><input type="checkbox" ${this.otrasCarreras ? 'checked' : ''} onchange="PantallaInscripcion.alternarOtras(this.checked)">
         Listar también materias de otras carreras para probar la validación RN3 (E6.2)</label>
-      <button class="btn btn-secundario btn-chico" ${this.comision && this.validacion?.ok ? '' : 'disabled'} onclick="PantallaInscripcion.simularConcurrencia()">
+      <button class="btn btn-secundario btn-chico btn-largo" ${this.comision && this.validacion?.ok ? '' : 'disabled'} onclick="PantallaInscripcion.simularConcurrencia()">
         Simular que otros estudiantes ocupan los lugares restantes (E9)</button>
     </section>`;
   },
