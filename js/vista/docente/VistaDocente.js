@@ -24,31 +24,39 @@ const VistaDocente = {
       const aprobadas = c.getInscripciones(EstadoInscripcion.APROBADA).length;
       return `<a class="panel comision-card" href="#/docente/comision/${c.id}">
         <div class="panel-titulo" style="margin-bottom:var(--e2)"><h3>${esc(c.materia.nombre)}</h3>${badgeComision(c.estado)}</div>
-        <p class="tenue chico">${c.codigo} · ${c.horario()} · Aula ${esc(c.aula)}</p>
+        ${datosConIcono([['reloj', horarioLargo(c)], ['aula', `Aula ${esc(c.aula)} · ${c.codigo}`]])}
         <p class="chico" style="margin-top:var(--e3)">${c.estado === EstadoComision.EN_CURSO ? plural(enCurso, 'estudiante cursando', 'estudiantes cursando')
           : c.estado === EstadoComision.FINALIZADA ? 'Cursada cerrada' : `${plural(aprobadas, 'inscripción aprobada', 'inscripciones aprobadas')} · ${c.cupoDisponible} lugares libres`}</p>
       </a>`;
     };
 
-    main.innerHTML = encabezado(`Hola, ${esc(d.nombre)}`, `${plural(vigentes.length, 'comisión a tu cargo', 'comisiones a tu cargo')} en el ${PERIODO.nombre}.`)
+    // Para hacer: notas finales que faltan, clase de hoy y novedades sin leer
+    const tareas = [];
+    const diaHoy = ['Domingo', ...DIAS][new Date().getDay()];
+    vigentes.forEach(c => {
+      if (c.estado !== EstadoComision.EN_CURSO) return;
+      const enCurso = c.getInscripciones(EstadoInscripcion.EN_CURSO);
+      const sinFinal = enCurso.filter(i => !i.getCalificacion(TipoCalificacion.FINAL)).length;
+      if (c.dia === diaHoy) tareas.push({ ico: 'reloj', tono: 'importante', titulo: `Hoy tenés clase de ${esc(c.materia.nombre)}`,
+        texto: `De ${c.horaInicio} a ${c.horaFin} en el aula ${esc(c.aula)}.`, accion: `<a class="btn btn-primario btn-chico" href="#/docente/comision/${c.id}/asistencia">Tomar asistencia</a>` });
+      if (sinFinal) tareas.push({ ico: 'cursada', titulo: `${esc(c.materia.nombre)}: ${plural(sinFinal, 'nota final pendiente', 'notas finales pendientes')}`,
+        texto: 'La administración puede cerrar la cursada cuando estén todas cargadas.', accion: `<a class="btn btn-secundario btn-chico" href="#/docente/comision/${c.id}">Cargar notas</a>` });
+    });
+    Notificador.de(d).filter(n => !n.leida).slice(0, 2).forEach(n => tareas.push({ ico: 'campana', titulo: esc(n.titulo), texto: esc(n.texto),
+      accion: `<button class="btn btn-secundario btn-chico" onclick="App.abrirNotificacion(${n.id})">Ver</button>` }));
+
+    main.innerHTML = encabezado(`Hola, ${esc(d.nombre)}`, `Tenés ${plural(vigentes.length, 'comisión a cargo', 'comisiones a cargo')} en el ${PERIODO.nombre}.`)
       + (r.ok ? '' : aviso('info', r.mensaje, ' La administración te asigna comisiones desde su panel.', r.codigo))
       + `<div class="inicio">
-        <section class="panel">
-          <div class="panel-titulo"><h2>Tu semana</h2></div>
-          ${grillaSemanal(vigentes.map(c => ({ comision: c, clase: c.estado === EstadoComision.EN_CURSO ? 'en-curso' : 'aprobada' })))}
-          <div class="grilla-ref"><span><i style="background:var(--birome)"></i>En curso</span><span><i style="background:var(--birome-cl);border:1px solid #BFCBFA"></i>Inscripción abierta o por empezar</span></div>
-        </section>
-        <div class="lado">
-          <section class="panel">
-            <div class="panel-titulo"><h2>Novedades</h2><a class="chico" href="#/docente/notificaciones">Ver todas</a></div>
-            ${listaNotificaciones(Notificador.de(d), 4)}
-          </section>
+        <div class="columna">
+          ${seccion('Para hacer', '', listaTareas(tareas))}
+          ${seccion('Tus comisiones', 'Entrá a una para cargar notas, tomar asistencia o publicar avisos.', `<div class="tarjetas dos">${comisiones.map(tarjeta).join('') || vacio('Sin comisiones', 'Todavía no tenés comisiones asignadas.')}</div>`)}
         </div>
-      </div>
-      <section style="margin-top:var(--e5)">
-        <div class="panel-titulo"><h2>Tus comisiones</h2></div>
-        <div class="tarjetas tres">${comisiones.map(tarjeta).join('') || vacio('Sin comisiones', 'Todavía no tenés comisiones asignadas.')}</div>
-      </section>`;
+        <div class="columna">
+          ${seccion('Tu semana', '', `<div class="panel">${grillaSemanal(vigentes.map(c => ({ comision: c, clase: c.estado === EstadoComision.EN_CURSO ? 'en-curso' : 'aprobada' })), null, true)}
+            <div class="grilla-ref"><span><i style="background:var(--birome)"></i>En curso</span><span><i style="background:var(--birome-cl);border:1px solid #BFCBFA"></i>Por empezar</span></div></div>`)}
+        </div>
+      </div>`;
   },
 
   // ---------- Comisión ----------
@@ -60,7 +68,8 @@ const VistaDocente = {
     }
     const base = `#/docente/comision/${c.id}`;
     const cabeza = `<a class="volver" href="#/docente">← Mis comisiones</a>`
-      + encabezado(esc(c.materia.nombre), `${c.codigo} · ${c.horario()} · Aula ${esc(c.aula)} · ${badgeComision(c.estado)}`)
+      + `<div class="encabezado"><div><h1>${esc(c.materia.nombre)} ${badgeComision(c.estado)}</h1>
+          ${datosConIcono([['reloj', horarioLargo(c)], ['aula', `Aula ${esc(c.aula)} · ${c.codigo}`], ['alumnos', plural(c.getInscripciones(EstadoInscripcion.EN_CURSO).length + c.getInscripciones(EstadoInscripcion.APROBADA).length, 'estudiante', 'estudiantes')]])}</div></div>`
       + pestanas([[base, 'Estudiantes y notas'], [base + '/asistencia', 'Asistencia'], [base + '/avisos', 'Avisos y material']]);
     const main = $('contenido');
     if (seccion === 'asistencia') return this.asistencia(main, c, cabeza);
@@ -244,17 +253,12 @@ const VistaDocente = {
   },
 
   // ---------- Notificaciones y perfil ----------
-  notificaciones(main) {
-    const lista = Notificador.de(this.d);
-    main.innerHTML = encabezado('Notificaciones') + `<section class="panel">
-      <div class="panel-titulo"><h2>Recientes</h2>${lista.some(n => !n.leida) ? '<button class="btn btn-secundario btn-chico" onclick="App.marcarTodas()">Marcar todas como leídas</button>' : ''}</div>
-      ${listaNotificaciones(lista)}</section>`;
-  },
+  notificaciones(main) { paginaNotificaciones(main, this.d); },
 
   perfil(main) {
     const d = this.d;
     main.innerHTML = `<section class="perfil-cabeza"><span class="avatar grande docente">${iniciales(d)}</span>
-      <div><h1>${esc(d.nombre)} ${esc(d.apellido)}</h1><p>Docente · Legajo ${d.legajo} · ${esc(d.especialidad)}</p></div></section>
+      <div><h1>${esc(d.nombre)} ${esc(d.apellido)}</h1><p>Docente de ${esc(d.especialidad.toLowerCase())}</p></div></section>
       <div class="dos-col">
         <section class="panel"><div class="panel-titulo"><h2>Datos</h2></div>
           <dl class="datos">
@@ -262,7 +266,7 @@ const VistaDocente = {
             <div style="grid-column:1/-1"><dt>Correo</dt><dd>${esc(d.email)}</dd></div>
             <div style="grid-column:1/-1"><dt>Comisiones</dt><dd>${d.consultarComisiones().map(c => esc(c.nombre())).join('<br>') || '—'}</dd></div>
           </dl></section>
-        ${formularioClave('VistaDocente')}
+        <div class="columna">${seccion('Contraseña', '', formularioClave('VistaDocente'))}</div>
       </div>`;
   },
   cambiarClave(f) { cambiarClave(this.d, f); },

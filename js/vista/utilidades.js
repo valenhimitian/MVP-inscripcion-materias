@@ -65,6 +65,11 @@ const ICONOS = {
   guia: '<circle cx="12" cy="12" r="9"/><path d="M10 9.5a2.5 2.5 0 1 1 3.3 2.4c-.8.3-1.3 1-1.3 1.8V14M12 17.5v.01"/>',
   descargar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   correo: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  aula: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  persona: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  cupo: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.5-5 6.5-5s5.5 1.5 6.5 5"/><path d="M17 8v6M14 11h6"/>',
+  flecha: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   error: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.01"/>',
   ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.5L16 9.5"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
@@ -75,6 +80,35 @@ function aviso(tipo, titulo, texto = '', regla = '') {
   const ico = { err: 'error', ok: 'ok', info: 'info', warn: 'info' }[tipo];
   return `<div class="aviso aviso-${tipo}" role="${tipo === 'err' ? 'alert' : 'status'}">${icono(ico)}
     <div><b>${titulo}</b>${texto ? `<span>${texto}</span>` : ''}${regla ? `<div class="regla">${regla}</div>` : ''}</div></div>`;
+}
+
+// ---------- Bloques de presentación ----------
+const horarioLargo = c => `${c.dia} de ${c.horaInicio} a ${c.horaFin}`;
+
+// Datos cortos con ícono, en lugar de una línea con puntos: [['reloj', 'Lunes de 18 a 22'], ...]
+function datosConIcono(filas) {
+  return `<ul class="datos-icono">${filas.filter(Boolean).map(([ic, txt]) => `<li>${icono(ic)}<span>${txt}</span></li>`).join('')}</ul>`;
+}
+
+// Sección con título, una línea que explica para qué sirve y una acción opcional
+function seccion(titulo, descripcion, contenido, accion = '') {
+  return `<section class="seccion"><header class="seccion-cabeza"><div><h2>${titulo}</h2>${descripcion ? `<p>${descripcion}</p>` : ''}</div>${accion}</header>${contenido}</section>`;
+}
+
+// Información secundaria plegada: se abre solo si hace falta
+function desplegable(titulo, contenido, { abierto = false, contador = null, simple = false } = {}) {
+  return `<details class="desplegable ${simple ? 'simple' : ''}" ${abierto ? 'open' : ''}>
+    <summary><span>${titulo}${contador !== null ? ` <span class="contador-gris">${contador}</span>` : ''}</span></summary>
+    <div class="desplegable-cuerpo">${contenido}</div></details>`;
+}
+
+// Lista de cosas para hacer: [{ ico, titulo, texto, accion, tono: 'importante' | 'error' | '' }]
+function listaTareas(tareas, vacia = 'Estás al día: no tenés nada pendiente.') {
+  if (!tareas.length) return `<div class="al-dia">${icono('ok')}<span>${vacia}</span></div>`;
+  return `<ul class="tareas">${tareas.map(t => `<li class="tarea ${t.tono || ''}">
+    <span class="tarea-ico">${icono(t.ico || 'info')}</span>
+    <div><b>${t.titulo}</b>${t.texto ? `<p>${t.texto}</p>` : ''}</div>
+    ${t.accion || ''}</li>`).join('')}</ul>`;
 }
 
 // Pestañas que navegan por hash: [[href, texto, contador?]]

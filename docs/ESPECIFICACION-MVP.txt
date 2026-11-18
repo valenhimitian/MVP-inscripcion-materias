@@ -1,0 +1,856 @@
+================================================================================
+CURSADA · AUTOGESTIÓN UNIVERSITARIA
+ESPECIFICACIÓN COMPLETA DEL MVP
+================================================================================
+
+Documento de contexto para personas o asistentes de IA que necesiten entender,
+mantener o ampliar este proyecto sin leer todo el código. Describe qué es, cómo
+está construido, qué reglas aplica, qué datos trae y cómo se prueba.
+
+Repositorio: https://github.com/valenhimitian/MVP-inscripcion-materias
+Rama principal: main
+Versión descripta: Cursada v2.2: interfaz simplificada, inscripción paso a paso y
+listas "Para hacer" (noviembre 2026)
+
+
+--------------------------------------------------------------------------------
+ÍNDICE
+--------------------------------------------------------------------------------
+ 1. Contexto académico
+ 2. Qué es Cursada
+ 3. Cómo se ejecuta
+ 4. Tecnología y decisiones de arquitectura
+ 5. Estructura de carpetas y orden de carga
+ 6. Modelo de dominio (entidades y enumeraciones)
+ 7. Diagramas de estado (DE01 a DE04 y certificado)
+ 8. Reglas de negocio y códigos de error
+ 9. Controladores (DS01, DS02, gestión, trámites, sesión)
+10. Servicios (notificaciones, correo, PDF, guardado)
+11. Autenticación, sesión y roles
+12. Rutas y pantallas
+13. Funcionalidad por rol
+14. Datos de ejemplo
+15. Modo demo, traza y guía de escenarios
+16. Marca y diseño visual
+17. Grilla horaria semanal
+18. Accesibilidad y diseño adaptable
+19. Pruebas realizadas
+20. Limitaciones conocidas
+21. Convenciones para modificar el proyecto
+22. Flujo de trabajo con Git
+
+
+================================================================================
+1. CONTEXTO ACADÉMICO
+================================================================================
+- Materia: Diseño de Aplicaciones Web. Tecnicatura Universitaria en Web, UNLaM.
+- Trabajo: TP Integral, segunda parte. El MVP es la última consigna.
+- Integrantes: Himitian, Valentín Daniel; Avila, Iván Nazareno; Romero, Yesica Romina.
+- Docentes de la materia: Abal, Juan Marcelo; Moreira, Rubén Darío.
+- Sistema modelado: "Ecosistema Integral de Gestión Universitaria".
+- Artefactos UML de la entrega que el MVP implementa y con los que es trazable:
+    · Diagrama de casos de uso v2.0.
+    · Diagrama de clases v2.0.
+    · DS01: diagrama de secuencia de CU01 "Inscribirse a Materia" (caso principal).
+    · DS02: diagrama de secuencia de CU02 "Registrar Calificación" (caso elegido).
+    · DE01 Inscripción, DE02 Comisión, DE03 Estudiante, DE04 Calificación.
+    · RF26: solicitud de certificados (constancias).
+    · Requisitos funcionales RF01 a RF31 y reglas de negocio RN1 a RN9.
+
+
+================================================================================
+2. QUÉ ES CURSADA
+================================================================================
+Cursada es un portal web de autogestión universitaria con tres roles:
+
+  ESTUDIANTE      se inscribe a materias, ve su horario, notas, asistencia y
+                  avisos, pide constancias y las descarga en PDF.
+  DOCENTE         ve sus comisiones, carga y modifica notas, toma asistencia y
+                  publica avisos o material.
+  ADMINISTRACIÓN  aprueba o rechaza inscripciones, emite constancias (genera el
+                  PDF y lo "envía" por correo), crea y gestiona cursadas,
+                  habilita o inhabilita estudiantes y gestiona docentes.
+
+"Cursada" es una marca inventada para el TP. No imita a la UNLaM ni a ninguna
+institución real. Todos los datos son ficticios.
+
+
+================================================================================
+3. CÓMO SE EJECUTA
+================================================================================
+- Abrir index.html en cualquier navegador moderno (Chrome, Edge, Firefox).
+  No necesita servidor, instalación, compilación ni base de datos.
+- Funciona abriéndolo como archivo (file://) y también publicado en GitHub Pages.
+- Las tipografías se cargan desde Google Fonts. Sin internet se usa la fuente
+  del sistema y todo sigue funcionando.
+- Los datos se guardan en el navegador (localStorage). Persisten al recargar.
+- Para volver a los datos iniciales:
+    · Administración › Mi perfil › "Reiniciar datos de la demo", o
+    · Guía de la demo › "Reiniciar datos".
+
+
+================================================================================
+4. TECNOLOGÍA Y DECISIONES DE ARQUITECTURA
+================================================================================
+- HTML5 + CSS3 + JavaScript (ES2020+) puro. Sin frameworks ni librerías.
+- Scripts clásicos (<script src>), NO módulos ES. Motivo: los módulos ES no
+  funcionan al abrir el archivo con file://. Por eso todo se comparte mediante
+  constantes globales y el ORDEN DE CARGA en index.html importa.
+- Aplicación de una sola página (SPA) con rutas por hash (#/ruta).
+- Arquitectura en capas que replica los estereotipos de los diagramas:
+    «entity»   js/modelo/      clases del dominio, reglas y transiciones de estado
+    «control»  js/control/     orquestan los casos de uso en el orden del DS
+    «boundary» js/vista/       pantallas: muestran datos y recogen acciones
+    servicios  js/servicios/   notificaciones, correo simulado, PDF, guardado
+- Las entidades lanzan Error con un mensaje en español cuando una operación no
+  está permitida. Los controladores devuelven objetos { ok, codigo, mensaje }.
+- Las vistas generan HTML con plantillas de texto (template literals) y lo
+  insertan con innerHTML. Todo texto variable pasa por esc() para evitar
+  inyección de HTML.
+- Los eventos se manejan con atributos onclick/onsubmit que llaman a métodos de
+  objetos globales (por ejemplo VistaAdmin.revisarIns(...)).
+- Cantidad de código: unas 3.900 líneas entre HTML, CSS y JS.
+
+
+================================================================================
+5. ESTRUCTURA DE CARPETAS Y ORDEN DE CARGA
+================================================================================
+index.html                         Estructura base, barra superior, menú, panel
+                                   de traza, diálogo y orden de los scripts.
+README.md                          Instrucciones y cuentas de prueba.
+docs/Resumen-Cursada-MVP.pdf       Resumen de 4 páginas con capturas.
+docs/ESPECIFICACION-MVP.txt        Este documento.
+assets/img/isotipo.svg             Isotipo (grilla 3x3 con un casillero amarillo).
+assets/img/logo.svg                Isotipo + palabra "cursada".
+assets/img/favicon.svg
+assets/site.webmanifest
+css/tokens.css                     Variables de marca: colores, tipografía, espacios.
+css/base.css                       Reset, tipografía base, foco, utilidades.
+css/layout.css                     Barra, menú lateral, contenido, pie, panel de traza.
+css/componentes.css                Botones, paneles, insignias, avisos, tablas,
+                                   diálogo, notificaciones, interruptor, grilla.
+css/vistas.css                     Estilos de cada pantalla.
+
+js/ (en el orden en que se cargan)
+  modelo/enumeraciones.js          Enumeraciones y ESTADOS_ACTIVOS.
+  modelo/entidades.js              Clases del dominio y Contadores.
+  servicios/notificaciones.js      Notificador y Correo.
+  servicios/pdf.js                 DocumentoPDF y ConstanciaPDF.
+  servicios/repositorio.js         Repositorio (guardar / cargar / reiniciar).
+  control/traza.js                 Traza, t() y falla().
+  control/InscripcionController.js CU01 · DS01.
+  control/CalificacionController.js CU02 · DS02, asistencia y avisos.
+  control/GestionController.js     TramiteController, GestionController, Sesion.
+  datos/datos.js                   PERIODO, DIAS_SEMANA, cargarDatos().
+  vista/utilidades.js              Helpers de formato, insignias, íconos, diálogo.
+  vista/grilla.js                  Grilla horaria semanal.
+  vista/VistaIngreso.js            Pantalla de ingreso.
+  vista/estudiante/VistaEstudiante.js     Inicio y Mi perfil del estudiante.
+  vista/estudiante/PantallaInscripcion.js Inscripción (boundary del DS01).
+  vista/docente/VistaDocente.js    Panel del docente (boundary del DS02).
+  vista/admin/VistaAdmin.js        Panel de administración.
+  vista/VistaGuia.js               Guía de la demo.
+  app.js                           Rutas, sesión, menú por rol, arranque.
+
+
+================================================================================
+6. MODELO DE DOMINIO
+================================================================================
+6.1 Enumeraciones (js/modelo/enumeraciones.js)
+  EstadoInscripcion  PENDIENTE, APROBADA, RECHAZADA, EN_CURSO, FINALIZADA, CANCELADA
+  EstadoComision     CREADA, ABIERTA, COMPLETA, EN_CURSO, FINALIZADA, DADA_DE_BAJA
+  EstadoEstudiante   REGISTRADO, HABILITADO, INHABILITADO, EGRESADO
+  EstadoCalificacion REGISTRADA, MODIFICADA, CERRADA, ANULADA
+  EstadoMatricula    ACTIVA, EGRESADO, BAJA
+  TipoCalificacion   PARCIAL, TP, RECUPERATORIO, FINAL
+  EstadoCertificado  SOLICITADO, GENERADO, ENVIADO, RECHAZADO
+  TipoCertificado    ALUMNO_REGULAR, EXAMEN
+  TipoContenido      MATERIAL, AVISO
+  EstadoRegistro     ACTIVO, INACTIVO   (docentes)
+  ESTADOS_ACTIVOS = [PENDIENTE, APROBADA, EN_CURSO]  (estado compuesto "Activa", RN5)
+
+6.2 Utilidades globales del modelo
+  Contadores { comprobante, certificado, comision }   numeradores persistidos
+  numero(prefijo, n)  → "INS-2026-00418", "CON-2026-00003"
+  hoy()               → fecha de hoy a las 00:00
+
+6.3 Clases (js/modelo/entidades.js)
+
+  Carrera(codigo, nombre)
+    materias[]                         agregación Carrera ◇— Materia
+    asociarMateria(m), desasociarMateria(m), consultarMaterias()
+    contieneMateria(m)                 RN3
+
+  Matricula(carrera, fechaIngreso, estado = ACTIVA)
+    esActiva()
+
+  Materia(codigo, nombre)
+    correlativas[] (autoasociación), comisiones[]
+    agregarCorrelativa(m)
+    consultarComisionesDisponibles()   solo CREADA, ABIERTA o COMPLETA
+    verificarCorrelativas(est, traza)  devuelve la lista de correlativas faltantes
+
+  Docente(legajo, dni, nombre, apellido, email, especialidad, estado = ACTIVO)
+    password = 'docente123', telefono, comisiones[]
+    nombreCompleto() "Apellido, Nombre"; nombreCorto() "Nombre Apellido"
+    estaActivo()
+    consultarComisiones()              todas menos DADA_DE_BAJA
+    estaACargo(com)                    RN1 de CU02
+    consultarInscriptos(com)           inscripciones EN_CURSO de la comisión
+    registrarCalificacion(ins, tipo, nota, fecha, obs)
+    modificarCalificacion(cal, nota, fecha, obs)
+    registrarAsistencia(ins, fecha, presente)  crea o modifica la de esa fecha
+    publicarContenido(com, titulo, descripcion, tipo)
+
+  Comision(codigo, materia, dia, horaInicio, horaFin, aula, docente,
+           cupoMaximo, cupoDisponible, estado, id?)
+    id autoincremental; inscripciones[]; contenidos[]
+    Al crearse se agrega a materia.comisiones y a docente.comisiones.
+    horario()  "Lunes 18:00 a 22:00"; nombre() "Materia · COM-01"
+    getInscripciones(estado?)
+    verificarCupo()                    RN4 + RN9: ABIERTA y cupoDisponible > 0
+    reservarCupo(traza)                RN8 atómica: descuenta y, si llega a 0, pasa a COMPLETA
+    liberarCupo()                      suma 1 y COMPLETA → ABIERTA
+    abrirInscripcion()                 CREADA → ABIERTA (o COMPLETA si cupo 0)
+    iniciarCursada()                   ABIERTA/COMPLETA → EN_CURSO; aprobadas → EN_CURSO;
+                                       pendientes → RECHAZADA ("Cierre del período de
+                                       inscripción sin revisión")
+    finalizarCursada()                 EN_CURSO → FINALIZADA; exige nota FINAL de cada
+                                       inscripción en curso; finaliza inscripciones
+    darDeBaja()                        no permitido si EN_CURSO o FINALIZADA; cancela
+                                       inscripciones activas; → DADA_DE_BAJA
+
+  Calificacion(tipo, nota, fecha, observaciones, estado = REGISTRADA)
+    notaAnterior, motivoAnulacion
+    validarNota()                      número entre 1 y 10 (RN4 de CU02)
+    estaVigente()                      REGISTRADA o MODIFICADA
+    modificarNota(nota, fecha, obs)    guarda notaAnterior, → MODIFICADA
+    cerrar()                           → CERRADA
+    anular(motivo)                     → ANULADA
+
+  Asistencia(fecha, presente, observaciones)
+  ContenidoAcademico(titulo, descripcion, tipo, fechaPublicacion); publicar()
+
+  Inscripcion(estudiante, comision, fecha = ahora, comprobante?)
+    estado (lo fija setEstado), motivoRechazo, calificaciones[] (composición),
+    asistencias[], comprobante "INS-2026-NNNNN". Se agrega a comision.inscripciones.
+    #cambiarEstado (privada) y #transicion(desde[], hacia): validan el DE01
+    aprobar()          PENDIENTE → APROBADA
+    rechazar(motivo)   PENDIENTE → RECHAZADA y libera cupo
+    cancelar()         PENDIENTE/APROBADA → CANCELADA y libera cupo
+    iniciarCursada()   APROBADA → EN_CURSO
+    finalizar()        EN_CURSO → FINALIZADA y cierra sus calificaciones
+    estaActiva()       RN5; estaEnCurso()
+    estaAprobada()     FINALIZADA con nota FINAL >= 4 y CERRADA (RN6)
+    getCalificaciones() sin anuladas; getCalificacion(tipo); notaFinal()
+    agregarCalificacion(tipo, nota, fecha, obs, estado) devuelve null si la nota
+                       no es válida (E8.1: el objeto se descarta)
+    porcentajeAsistencia()
+
+  Certificado(tipo, estudiante, inscripcion?, presentarAnte, fechaExamen?,
+              fechaSolicitud, numero?)
+    numero "CON-2026-NNNNN", estado SOLICITADO, motivoRechazo,
+    fechaEmision, fechaEnvio, codigoVerificacion
+    generar()          SOLICITADO → GENERADO, calcula un código de verificación
+    enviarPorCorreo()  GENERADO → ENVIADO
+    rechazar(motivo)   SOLICITADO → RECHAZADO
+    estaDisponible()   GENERADO o ENVIADO
+
+  Estudiante(legajo, dni, nombre, apellido, email, estado, fechaNacimiento)
+    password = 'alumno123', telefono, matriculas[], inscripciones[], certificados[]
+    estaHabilitado()   RN1
+    getCarreraActiva() carrera de la matrícula ACTIVA; getMatriculaActiva()
+    tieneInscripcionActiva(m)  RN5; tieneMateriaAprobada(m) RN6
+    agregarInscripcion(ins); cancelarInscripcion(ins)
+    consultarInscripciones(); consultarHistorial() (FINALIZADA)
+    solicitarCertificado(tipo, ins, presentarAnte, fechaExamen)  ver regla RF26
+    habilitar()        REGISTRADO/INHABILITADO → HABILITADO (requiere matrícula activa)
+    darDeBaja()        HABILITADO → INHABILITADO, cancela sus PENDIENTES
+
+  Administrador(usuario, dni, nombre, apellido, email)
+    password = 'admin123'
+    revisarSolicitud(ins, aprobar, motivo)   no aprueba si el estudiante ya no está habilitado
+    revisarCertificado(cert, aprobar, motivo) aprobar = generar() + enviarPorCorreo()
+    crearComision({...})                      RF14, ver validaciones en sección 8
+
+
+================================================================================
+7. DIAGRAMAS DE ESTADO
+================================================================================
+DE01 Inscripción
+  (nace) → PENDIENTE                           RN7
+  PENDIENTE → APROBADA                         admin aprueba
+  PENDIENTE → RECHAZADA                        admin rechaza o la cursada inicia sin revisión
+  PENDIENTE | APROBADA → CANCELADA             estudiante cancela, comisión dada de baja,
+                                               estudiante inhabilitado (solo pendientes)
+  APROBADA → EN_CURSO                          admin inicia la cursada
+  EN_CURSO → FINALIZADA                        admin finaliza la cursada
+  Rechazar y cancelar liberan el cupo (RN8).
+
+DE02 Comisión
+  CREADA → ABIERTA                             abrir inscripción
+  ABIERTA → COMPLETA                           se ocupa el último lugar
+  COMPLETA → ABIERTA                           se libera un lugar
+  ABIERTA | COMPLETA → EN_CURSO                iniciar cursada
+  EN_CURSO → FINALIZADA                        finalizar [todas las notas finales cargadas]
+  CREADA | ABIERTA | COMPLETA → DADA_DE_BAJA   eliminar (baja lógica)
+
+DE03 Estudiante
+  REGISTRADO → HABILITADO                      [matrícula activa]
+  HABILITADO → INHABILITADO                    cancela sus inscripciones pendientes
+  INHABILITADO → HABILITADO                    rehabilitación
+  EGRESADO                                     existe en el enum; no hay acción que lo asigne
+
+DE04 Calificación
+  (nace) → REGISTRADA
+  REGISTRADA | MODIFICADA → MODIFICADA         nueva nota del mismo tipo (A6)
+  REGISTRADA | MODIFICADA → CERRADA            al finalizar la cursada
+  REGISTRADA | MODIFICADA → ANULADA            método disponible, sin pantalla
+
+Certificado (RF26)
+  SOLICITADO → GENERADO → ENVIADO              admin aprueba
+  SOLICITADO → RECHAZADO                       admin rechaza con motivo
+
+
+================================================================================
+8. REGLAS DE NEGOCIO Y CÓDIGOS DE ERROR
+================================================================================
+CU01 Inscribirse a materia
+  E2 · RN1      El estudiante debe estar HABILITADO para iniciar.
+  A2            Debe tener una carrera activa (matrícula ACTIVA).
+  (sin código)  Si la carrera no tiene materias: aviso "Sin materias disponibles".
+  A4            Materia sin comisiones ABIERTAS: aviso, no se puede seguir.
+  E6.2 · RN3    La materia debe pertenecer a la carrera activa.
+  E6 · RN5      No puede tener otra inscripción activa a la misma materia.
+  E6.3 · RN6    Debe tener aprobadas las correlativas (informa cuáles faltan).
+  E6.1 · RN4    La comisión debe tener cupo.
+  E6.4 · RN9    La comisión debe estar en período de inscripción (ABIERTA).
+  RN7           Toda inscripción nace PENDIENTE y genera comprobante.
+  RN8 · E9      El cupo se reserva de forma atómica al confirmar. Si otro ocupó el
+                último lugar entre la validación y la confirmación, no se registra.
+  A8            Si el estudiante no confirma, no se registra nada.
+  Orden de validación (igual al DS01): RN3 → RN5 → RN6 → RN4/RN9. Corta en la primera falla.
+
+CU02 Registrar calificación
+  A2            Docente sin comisiones asignadas: aviso.
+  RN1 · CU02    El docente solo accede a comisiones a su cargo.
+  A4            Comisión sin estudiantes EN_CURSO: aviso.
+  E8            Tipo, nota y fecha son obligatorios.
+  E8.2          La fecha no puede ser futura ni anterior a 2026.
+  E8.3          La inscripción debe estar EN_CURSO y la nota existente no cerrada.
+  E8.1 · RN4    La nota debe estar entre 1 y 10 (admite medios puntos).
+  A6            Si ya existe una nota de ese tipo, se modifica y se guarda la anterior.
+
+RF26 Constancias
+  - Solo puede pedirla un estudiante HABILITADO con matrícula activa.
+  - EXAMEN requiere una materia EN_CURSO y la fecha del examen.
+  - No se puede repetir una solicitud igual que siga en revisión.
+  - "Presentar ante" es opcional; si queda vacío dice "quien corresponda".
+  - Solo la administración aprueba o rechaza. Los docentes no intervienen.
+
+Gestión (administración)
+  Crear cursada: todos los campos obligatorios; docente ACTIVO; hora fin > hora
+  inicio; cupo entre 1 y 200; código de comisión no repetido para la misma
+  materia (salvo bajas o finalizadas); el docente no puede tener otra comisión
+  vigente que se superponga en día y horario.
+  Iniciar cursada: solo desde ABIERTA o COMPLETA.
+  Finalizar cursada: solo EN_CURSO y con nota FINAL de todos sus estudiantes.
+  Eliminar cursada: solo antes de EN_CURSO.
+  Desactivar docente: no si tiene comisiones vigentes (CREADA, ABIERTA, COMPLETA, EN_CURSO).
+  Alta docente: DNI de 7 u 8 números, no repetido entre todos los usuarios;
+  nombre y apellido obligatorios; correo válido. Contraseña inicial docente123.
+
+Sesión
+  DNI de 7 u 8 números (se ignoran puntos); contraseña obligatoria; un docente
+  INACTIVO no puede ingresar. Cambio de contraseña: actual correcta, nueva de 6
+  o más caracteres y repetida igual.
+
+
+================================================================================
+9. CONTROLADORES
+================================================================================
+InscripcionController (DS01). Registra cada mensaje en la Traza con su número.
+  iniciarInscripcion(est)                       mensajes 2 a 11
+  obtenerComisiones(mat)                        mensajes 13 a 18
+  validarRequisitos(est, carrera, mat, com)     mensajes 20 a 32
+  confirmarInscripcion(est, com)                mensajes 34 a 44 (región critical)
+    Al terminar bien, notifica a la administración.
+  La pantalla registra los mensajes 1, 11, 12, 18, 19, 32, 33, 45, 46 y 47.
+
+CalificacionController (DS02)
+  obtenerComisiones(doc)                        mensajes 2 a 7
+  obtenerInscriptos(doc, com)                   mensajes 9 a 17
+  obtenerCalificaciones(ins)                    mensajes 18 a 21
+  registrarCalificacion(doc, ins, tipo, nota, fecha, obs)  mensajes 24 a 45
+    Notifica al estudiante ("Nueva calificación" o "Calificación modificada").
+  tomarAsistencia(doc, com, fecha, presentesComprobantes[])
+  publicarAviso(doc, com, titulo, descripcion, tipo)  notifica a estudiantes
+    EN_CURSO y APROBADA de esa comisión.
+  etiquetaTipo(tipo) → "Parcial", "Trabajo práctico", "Recuperatorio", "Nota final".
+
+TramiteController
+  solicitarConstancia(est, tipo, ins, presentarAnte, fechaExamen)
+    Notifica a la administración y al estudiante.
+
+GestionController (operaciones de la administración, cada una notifica a los afectados)
+  revisarInscripcion(ins, aprobar, motivo)      notifica a estudiante y, si aprueba, al docente
+  revisarConstancia(cert, aprobar, motivo)      aprueba: genera, "envía" correo con
+                                                adjunto y notifica; rechaza: notifica motivo
+  crearComision(datos)                          agrega a D.comisiones y notifica al docente
+  abrirInscripcion(c), iniciarCursada(c), finalizarCursada(c), darDeBaja(c)
+  habilitar(e), inhabilitar(e)
+  altaDocente(datos)                            envía correo de bienvenida
+  cambiarEstadoDocente(d)
+
+Sesion
+  buscarPorDni(dni) → { usuario, rol }   rol: 'estudiante' | 'docente' | 'admin'
+  autenticar(dni, password)
+  cambiarPassword(usuario, actual, nueva, repetida)
+
+
+================================================================================
+10. SERVICIOS
+================================================================================
+Notificador (js/servicios/notificaciones.js)
+  Notificaciones globales en D.notificaciones: { id, para, titulo, texto, enlace,
+  fecha, leida }. "para" es 'E:<legajo>', 'D:<legajo>' o 'A' (administración).
+  notificar(para|usuario, titulo, texto, enlace?, fecha?)
+  de(usuario), sinLeer(usuario), marcarLeida(id), marcarTodas(usuario)
+  "enlace" es una ruta hash: al tocar la notificación se marca leída y se navega.
+
+Correo (simulado)
+  enviar(para, asunto, cuerpo, adjunto?) guarda en D.correos. No sale ningún
+  correo real: el sitio no tiene servidor. La administración ve la bandeja de
+  enviados en Trámites, con el PDF adjunto descargable.
+
+DocumentoPDF y ConstanciaPDF (js/servicios/pdf.js)
+  Generador de PDF 1.4 propio, sin librerías: una página A4, fuentes Helvetica y
+  Helvetica-Bold con codificación WinAnsi (soporta tildes y ñ), rectángulos,
+  líneas, texto alineado y párrafos con corte de línea. Coordenadas con origen
+  arriba a la izquierda.
+  ConstanciaPDF.generar(cert) → Uint8Array con la constancia:
+    banda azul con isotipo y "cursada", número de constancia, título ("Constancia
+    de alumno regular" o "Constancia de examen"), fecha de emisión, texto
+    principal, tabla de datos (estudiante, DNI, legajo, carrera, período, materias
+    en curso o materia y fecha del examen, presentada ante), cierre, firma de
+    "Administración académica", código de verificación y la leyenda
+    "MVP académico: sin validez oficial".
+  ConstanciaPDF.descargar(cert, abrir?) descarga "constancia-<numero>.pdf" o la
+  abre en otra pestaña.
+
+Repositorio (js/servicios/repositorio.js)
+  CLAVE = 'cursada.datos.v2' en localStorage.
+  serializar() convierte el grafo de objetos en JSON con referencias por código
+  (materia por código, comisión por id, docente por legajo, inscripción por
+  comprobante). deserializar() lo reconstruye con las mismas clases.
+  guardar(), cargar() (si no hay datos guardados, llama a cargarDatos()), reiniciar().
+  Se guarda en cada navegación, después de cada acción y al cerrar la página.
+  Si se cambia la forma de los datos, conviene subir la versión de CLAVE para no
+  leer datos viejos incompatibles.
+
+
+================================================================================
+11. AUTENTICACIÓN, SESIÓN Y ROLES
+================================================================================
+- Ingreso con DNI y contraseña. Las contraseñas están en texto plano dentro de
+  los datos: es una simulación para el TP, no hay seguridad real.
+- La sesión guarda el DNI en sessionStorage ('cursada.sesion'): sobrevive al
+  recargar, pero cada pestaña tiene su propia sesión. Así se puede tener un
+  estudiante en una pestaña y la administración en otra.
+- Escucha el evento 'storage': si otra pestaña guarda datos, esta los recarga y
+  vuelve a dibujar la pantalla.
+- Cada ruta declara su rol. Si el usuario entra a una ruta de otro rol, lo
+  redirige a su inicio. Sin sesión, solo se ve #/ingresar y #/guia.
+
+Cuentas de prueba
+  Rol            Nombre                DNI        Contraseña  Estado / nota
+  Estudiante     Iván Nazareno Avila   40111222   alumno123   Habilitado
+  Estudiante     Martina Gómez         41222333   alumno123   Habilitada
+  Estudiante     Camila Ruiz           38333444   alumno123   Habilitada; egresada de Informática
+  Estudiante     Sofía Martínez        42444555   alumno123   Habilitada
+  Estudiante     Tomás Herrera         39555666   alumno123   Inhabilitado
+  Estudiante     Lucía Fernández       44666777   alumno123   Registrada (sin habilitar)
+  Docente        Laura Medina          30777888   docente123  Cuenta docente que se muestra
+  Administración Paula Rossi           28999000   admin123
+  Los otros 8 docentes también pueden ingresar con su DNI y docente123.
+
+
+================================================================================
+12. RUTAS Y PANTALLAS
+================================================================================
+Pública
+  #/ingresar                        Ingreso (DNI + contraseña, cuentas de prueba al costado)
+  #/guia                            Guía de la demo
+
+Estudiante
+  #/inicio                          Saludo, semana en grilla, llamado a inscribirse,
+                                    trámites y novedades
+  #/inscripcion                     Inscripción en 3 pasos (PantallaInscripcion)
+  #/perfil                          Mi perfil (datos, contacto, contraseña)
+  #/perfil/cursada                  Mi cursada (página propia en el menú)
+  #/perfil/tramites                 Trámites (página propia en el menú)
+  #/perfil/notificaciones           Notificaciones (página propia en el menú)
+
+Docente
+  #/docente                         Inicio: semana, novedades y tarjetas de comisiones
+  #/docente/comision/:id            Comisión › Estudiantes y notas (DS02)
+  #/docente/comision/:id/asistencia Comisión › Asistencia
+  #/docente/comision/:id/avisos     Comisión › Avisos y material
+  #/docente/notificaciones
+  #/docente/perfil
+
+Administración
+  #/admin                           Resumen
+  #/admin/inscripciones             Solicitudes pendientes y revisadas
+  #/admin/tramites                  Constancias por emitir, emitidas y correos enviados
+  #/admin/cursadas                  Listado con filtro por estado y acciones
+  #/admin/cursadas/nueva            Formulario de nueva cursada
+  #/admin/estudiantes               Listado con buscador
+  #/admin/estudiantes/:legajo       Ficha del estudiante
+  #/admin/docentes                  Listado, alta, activar/desactivar
+  #/admin/notificaciones
+  #/admin/perfil                    Cambio de contraseña y reinicio de datos
+
+Estructura común de la aplicación autenticada
+  - Barra superior mínima: logo (vuelve al inicio del rol), campana con
+    cantidad sin leer, usuario (lleva a su perfil) y "Salir".
+  - Menú lateral según el rol, con contadores (pendientes, trámites, no leídas).
+    Al pie del menú: el período lectivo y el interruptor "Modo demo".
+    En pantallas chicas el menú pasa a una fila horizontal desplazable y el pie
+    se oculta.
+  - Contenido principal.
+  - Panel lateral de traza DS01/DS02 (solo en modo demo y en las pantallas que lo usan).
+  - Pie: "Cursada · MVP del Ecosistema Integral de Gestión Universitaria".
+  - Diálogos propios (<dialog>) en lugar de alert/confirm/prompt.
+  - Avisos emergentes abajo al centro (máximo 3 a la vez, 4,5 s).
+
+
+================================================================================
+13. FUNCIONALIDAD POR ROL
+================================================================================
+Principios de la interfaz (v2.2)
+  - Cada pantalla de inicio arranca con "Para hacer": una lista de tareas con
+    su botón (inscribirse, revisar solicitudes, cargar notas, ver novedades).
+  - Una idea por bloque, con título y una línea que explica para qué sirve.
+  - Los datos de una comisión se muestran con íconos (horario, aula, docente)
+    en lugar de una línea con puntos.
+  - Lo secundario va plegado en desplegables (historiales, rechazadas,
+    correos enviados, avisos del docente, notificaciones leídas).
+
+13.1 Estudiante
+  Inicio: "Para hacer" (inscripción abierta, solicitudes en revisión,
+    constancias en revisión y hasta 3 novedades sin leer), "Tus materias" con
+    horario y aula, y "Tu semana" en una grilla compacta.
+  Inscripción (PantallaInscripcion, DS01): asistente que muestra UN paso por
+    vez. Los pasos ya hechos se pueden tocar para volver.
+    Paso 1 Materia: lista de materias de la carrera activa, con código,
+           correlativas y cantidad de comisiones abiertas.
+    Paso 2 Comisión: código, docente, día, horario, aula, estado y barra de cupo.
+           Las comisiones sin cupo o fuera de período se ven atenuadas pero se
+           pueden elegir para que el sistema explique el motivo (E6.1 / E6.4).
+           Debajo se muestran las 4 validaciones con ✓, ✕ o "no evaluada".
+    Paso 3 Confirmación: resumen, "Cumplís los cuatro requisitos" (el detalle
+           queda plegado) y botones "Elegir otra comisión" (A8) y
+           "Confirmar inscripción". Si una validación falla, el detalle de
+           las cuatro se muestra en el paso 2 junto al error.
+    Resultado: comprobante con número, datos, estado Pendiente y botones
+    imprimir, inscribirse a otra materia, ver mi cursada.
+    Al costado: grilla "Cómo queda tu semana" con la comisión elegida resaltada
+    en amarillo y aviso si se superpone con otra materia.
+    En modo demo: herramientas de prueba (listar materias de otras carreras;
+    simular que otros ocupan los lugares restantes para provocar E9).
+  Mi perfil: datos académicos, contacto editable (correo y teléfono) y cambio
+    de contraseña.
+  Mi cursada: tarjetas de materias activas con horario, aula y docente; notas
+    (Parcial, TP, Recup., Final); barra de asistencia; avisos del docente
+    plegados; botón
+    "Cancelar inscripción" (Pendiente o Aprobada) y atajo "Pedir constancia de
+    examen". Historial académico (finalizadas con nota y Aprobada/Desaprobada).
+    Solicitudes rechazadas o canceladas, plegadas, con su motivo.
+  Trámites: formulario para pedir constancia (alumno regular o
+    examen, materia, fecha del examen, "presentar ante") y tabla de trámites con
+    en forma de lista de tarjetas con estado y botón "Descargar PDF" / "Ver".
+  Notificaciones (igual para los tres roles): "Sin leer" arriba y las leídas
+    plegadas; "Marcar todas como leídas".
+
+13.2 Docente
+  Inicio: "Para hacer" (clase de hoy con atajo a asistencia, notas finales
+    pendientes por comisión, novedades sin leer), tarjetas de cada comisión y
+    su semana en una grilla compacta.
+  Comisión › Estudiantes y notas: si la comisión está EN_CURSO, tabla de
+    estudiantes con sus notas por tipo y asistencia, y botón "Cargar nota".
+    El formulario (tipo, nota de 1 a 10 con medios puntos, fecha, observaciones)
+    muestra el resultado del DS02: éxito o el error con su código. Si ya existe
+    una nota de ese tipo, avisa que se modificará (A6) y muestra la anterior.
+    Si la comisión no empezó o ya finalizó, muestra los inscriptos sin edición.
+  Comisión › Asistencia: elegir fecha (no futura), marcar presentes y guardar;
+    tabla de las últimas 6 clases con P/A y total %.
+  Comisión › Avisos y material: publicar (tipo, título, mensaje) y listado.
+  Notificaciones y perfil (datos y cambio de contraseña).
+
+13.3 Administración
+  Resumen: "Para revisar" (solicitudes de inscripción, constancias por emitir,
+    estudiantes registrados sin habilitar, cursadas creadas sin abrir),
+    novedades y un bloque "Estado general" con estudiantes y cursadas por
+    estado y docentes activos.
+  Inscripciones: aprobar (con confirmación) o rechazar (con motivo editable,
+    por defecto "Documentación incompleta"). Revisadas del cuatrimestre, plegadas.
+  Trámites: "Aprobar y enviar" o "Rechazar" (motivo por defecto "No registra
+    cursada en el período"). Emitidas (con descarga del PDF) y correos
+    enviados, ambos plegados.
+  Cursadas: filtro (Vigentes, Todas o por estado). Acciones según estado:
+    Abrir inscripción, Iniciar cursada, Finalizar cursada, Eliminar.
+    Nueva cursada: materia, comisión (por defecto COM-05), aula, cupo, docente,
+    día (por defecto jueves), desde y hasta (franjas de 30 minutos, 08:00 a 22:00).
+  Estudiantes: buscador por nombre, DNI o legajo; ficha con datos, matrículas,
+    trámites, inscripciones (estado, nota final, asistencia) y botones
+    Habilitar / Inhabilitar.
+  Docentes: tabla con cursadas vigentes y estado; Activar/Desactivar;
+    formulario "Agregar docente".
+  Mi perfil: cambio de contraseña y "Reiniciar datos de la demo".
+
+
+================================================================================
+14. DATOS DE EJEMPLO (js/datos/datos.js, función cargarDatos())
+================================================================================
+PERIODO = { nombre: '2.º cuatrimestre 2026', cierreInscripcion: 28/11/2026 }
+
+Carreras
+  TUW  Tecnicatura Universitaria en Web
+       materias: Programación II, Programación Web I, Programación Web II,
+       Diseño de Aplicaciones Web/Móviles, Base de Datos I, Inglés Técnico II,
+       Visualización e Interfaces
+  INF  Ingeniería en Informática: Análisis Matemático I, Base de Datos I
+
+Materias (código · nombre · correlativa)
+  IWeb-005 Programación II
+  IWeb-007 Programación Web I
+  IWeb-010 Programación Web II               requiere Programación Web I
+  IWeb-012 Diseño de Aplicaciones Web/Móviles requiere Programación II
+  IWeb-008 Base de Datos I
+  IWeb-009 Inglés Técnico II
+  IWeb-011 Visualización e Interfaces
+  INF-001  Análisis Matemático I
+
+Docentes (legajo · DNI · nombre · especialidad)
+  D-1021 30777888 Laura Medina    Bases de datos y diseño web
+  D-1034 27555111 Martín Ortega   Ingeniería de software
+  D-1047 29111444 Silvia Moreno   Diseño de interfaces
+  D-1052 31222555 Diego García    Desarrollo web
+  D-1060 26333666 Pablo Díaz      Programación
+  D-1071 32444777 Ricardo Sosa    Bases de datos
+  D-1083 28666999 Ana Benítez     Inglés técnico
+  D-1090 33888000 Carla Ibáñez    Visualización de datos
+  D-1102 25999222 Jorge Pérez     Matemática
+
+Comisiones (id · materia · código · día y horario · aula · docente · cupo libre/máx · estado)
+   1 DAW  COM-01 Lunes 18-22      102    Medina   12/40 ABIERTA
+   2 DAW  COM-02 Martes 14-18     215    Moreno    0/40 COMPLETA
+   3 DAW  COM-03 Jueves 08-12     310    Ortega   40/40 CREADA
+   4 PW2  COM-01 Miércoles 18-22  214    García    9/30 ABIERTA
+   5 PW1  COM-03 Sábado 08-12     Lab. 2 Díaz      6/35 ABIERTA
+   6 BD1  COM-02 Viernes 18-22    110    Medina    0/30 EN_CURSO
+   7 BD1  COM-04 Sábado 09-13     Lab. 3 Sosa     15/30 ABIERTA
+   8 ING  COM-01 Martes 08-10     105    Benítez   4/25 ABIERTA
+   9 VI   COM-01 Miércoles 14-18  Lab. 1 Ibáñez    1/30 ABIERTA   (último lugar)
+  10 AM1  COM-01 Lunes 14-18      201    Pérez    25/60 ABIERTA
+  11 PR2  COM-01 Lunes 08-12      Lab. 1 Díaz     FINALIZADA (histórica)
+  12 PW1  COM-02 Martes 08-12     Lab. 2 Díaz     FINALIZADA (histórica)
+  (Los cupos ocupados representan a otros estudiantes que no están cargados.)
+
+Estudiantes e inscripciones
+  Iván Avila (14253): TUW desde 2023. PR2 finalizada con 7 (aprobada).
+    BD1 COM-02 en curso, parcial 7, asistencia 4 de 5. Inglés COM-01 aprobada.
+    PW1 COM-03 rechazada ("Documentación de equivalencia incompleta").
+    Constancia de alumno regular enviada (CON-2026-00001) en agosto.
+  Martina Gómez (15110): TUW desde 2024. PW1 finalizada con 8.
+    BD1 en curso, parcial 8, TP 9. Constancia de examen de BD1 en revisión
+    (CON-2026-00002).
+  Camila Ruiz (13990): Informática egresada (2018) + TUW activa desde 2025.
+    PW1 finalizada con 9. BD1 en curso, parcial 5.
+  Sofía Martínez (15240): TUW desde 2024. PR2 finalizada con 6. BD1 en curso
+    sin notas. DAW COM-01 pendiente de revisión.
+  Tomás Herrera (12045): inhabilitado, sin inscripciones.
+  Lucía Fernández (16020): registrada, sin habilitar, sin inscripciones.
+
+Otros
+  - Asistencias de BD1 COM-02 en 5 fechas de octubre y noviembre.
+  - Contenidos de BD1 COM-02: aviso "Recuperatorio del primer parcial" y material
+    "Guía de ejercicios: normalización".
+  - Notificaciones iniciales para estudiantes, la docente y la administración.
+  - Numeradores: la próxima inscripción nueva es INS-2026-00423; la próxima
+    constancia, CON-2026-00003.
+
+
+================================================================================
+15. MODO DEMO, TRAZA Y GUÍA DE ESCENARIOS
+================================================================================
+- El interruptor "Modo demo" se recuerda en localStorage ('cursada.demo').
+- Con el modo demo activo:
+    · En #/inscripcion (estudiante) aparece el panel "Secuencia DS01".
+    · En #/docente y #/docente/comision/:id aparece "Secuencia DS02".
+    · Cada línea es un mensaje numerado como en el diagrama; verde = ok,
+      rojo = falla (break), amarillo = título, celeste = cambio de estado.
+    · Se habilitan las herramientas de prueba de la inscripción.
+    · El menú suma "Guía de la demo".
+- Guía de la demo (#/guia): 16 escenarios agrupados. El botón "Probar" activa el
+  modo demo, ingresa con el usuario correcto y deja la pantalla en el resultado.
+    CU01: inscripción exitosa; comisión sin cupo; ya inscripto; correlativas;
+          materia de otra carrera; fuera de período; último lugar y concurrencia
+          (E9); estudiante no habilitado; carrera activa por matrícula.
+    Administración: aprobar o rechazar inscripciones; crear, abrir, iniciar y
+          eliminar cursadas.
+    CU02: cargar y modificar notas; asistencia y avisos.
+    RF26: pedir una constancia; aprobar, generar el PDF y enviarlo; descargarla.
+
+Demostración sugerida de punta a punta (dos pestañas)
+  1. Pestaña A: Iván se inscribe a DAW COM-01 y pide una constancia.
+  2. Pestaña B: la administración aprueba la inscripción y la constancia.
+  3. Administración › Cursadas: iniciar DAW COM-01.
+  4. Laura Medina (docente) carga la nota final de Iván.
+  5. Administración finaliza la cursada.
+  6. Iván ve la materia en su historial y descarga su constancia en PDF.
+
+
+================================================================================
+16. MARCA Y DISEÑO VISUAL
+================================================================================
+Concepto: la grilla horaria semanal es el elemento propio de la marca. El
+isotipo es una grilla de 3x3 con el casillero central en amarillo resaltador:
+"tu lugar en la semana".
+
+Colores (css/tokens.css)
+  --birome      #2645D6  acción principal, marca
+  --birome-osc  #1A33A8  hover, texto sobre fondo celeste
+  --birome-cl   #E6EBFF  fondos suaves, elemento activo del menú
+  --resaltador  #FFD84D  lo que eligió el usuario, paso actual, contadores
+  --resaltador-cl #FFF4C7
+  --tinta       #16213E  texto
+  --grafito     #5A6478  texto secundario
+  --papel       #F5F7FB  fondo
+  --linea       #DDE2EC  bordes
+  Estados: ok #17663F/#DDF3E6, error #A3231B/#FCE4E1, aviso #7A4E00/#FFF0C2,
+  información #1A33A8/#E6EBFF, neutro #4A5366/#E9ECF2.
+
+Tipografías: Bricolage Grotesque (títulos), Atkinson Hyperlegible (texto,
+pensada para máxima legibilidad), JetBrains Mono (números de comprobante y traza).
+Escala tipográfica de razón 1,25. Radios: 8 px controles, 14 px paneles.
+
+Voz de los textos: español rioplatense ("vos"), frases cortas, verbos concretos
+en los botones ("Confirmar inscripción", "Aprobar y enviar"). Los errores dicen
+qué pasó y qué hacer, sin disculpas.
+
+
+================================================================================
+17. GRILLA HORARIA SEMANAL (js/vista/grilla.js)
+================================================================================
+- Columnas: etiqueta de hora + lunes a sábado. Filas: encabezado + 28 filas de
+  30 minutos (08:00 a 22:00).
+- Las líneas de cada hora (y punteadas cada media hora), las etiquetas de hora y
+  los bloques de materias son celdas de la MISMA grilla CSS. Por eso quedan
+  alineados en cualquier tamaño.
+- La etiqueta de cada hora va debajo de la línea de su hora, dentro de su fila:
+  nunca pisa el encabezado.
+- Alto de fila en rem: crece si el usuario agranda la letra. Además, con
+  container queries, crece según el ancho disponible (1 rem; 1,25 rem desde
+  520 px; 1,4 rem desde 760 px; versión compacta 0,9 rem / 1,05 rem).
+- En anchos muy chicos los días se muestran con una letra (L, M, M, J, V, S).
+- Bloques: título con hasta 2 líneas (3 o 4 si el bloque es alto) y "…";
+  segunda línea (comisión y aula) que se oculta si el bloque es bajo o angosto.
+  El nombre completo aparece al pasar el mouse.
+- Clases de bloque: en-curso (azul), aprobada (celeste), pendiente (rayado
+  amarillo), vista-previa (amarillo con borde punteado), choque (borde rojo
+  cuando se superpone con la vista previa).
+- API: grillaSemanal(items, vistaPrevia?, compacta?) con items
+  [{ comision, clase, sub? }]; itemsDeInscripciones(lista); referenciasGrilla().
+
+
+================================================================================
+18. ACCESIBILIDAD Y DISEÑO ADAPTABLE
+================================================================================
+- Enlace "Saltar al contenido", foco visible, aria-current en menú y pestañas,
+  aria-live en avisos y traza, role="alert" en errores, etiquetas en todos los
+  campos, la grilla tiene una descripción textual de las materias.
+- Respeta prefers-reduced-motion.
+- El layout usa container queries sobre el contenido (#contenido), así que las
+  columnas se apilan según el espacio real, también cuando se abre el panel de traza.
+- Los hijos de las grillas de página tienen min-width: 0 y las tablas se
+  desplazan dentro de su recuadro: la página nunca queda más ancha que la pantalla.
+- Botones en una sola línea (white-space: nowrap), salvo .btn-largo.
+- Se imprime solo el comprobante de inscripción (estilos @media print).
+
+
+================================================================================
+19. PRUEBAS REALIZADAS
+================================================================================
+Pruebas automáticas con un navegador sin interfaz (Chrome + Playwright):
+- Recorrido completo: alumno → administración → docente → administración →
+  alumno, con recarga de página y descarga del PDF. Sin errores de consola.
+- Los 16 escenarios de la guía: cada uno muestra la regla esperada.
+- Auditoría visual en 8 anchos (1440, 1280, 1180, 1024, 860, 768, 600 y 390 px)
+  de todas las rutas de los 3 roles: sin desborde horizontal de página, sin
+  horas pisando el encabezado, sin menú de más de 2 líneas.
+- Validación del PDF con pdfinfo y pdftotext: una página A4, texto con tildes
+  correcto y código de verificación.
+
+
+================================================================================
+20. LIMITACIONES CONOCIDAS
+================================================================================
+- Sin backend: no hay correo real (se registra el envío) ni seguridad real
+  (contraseñas en texto plano, todo se valida en el navegador).
+- Los datos viven en el navegador de cada persona: otra computadora o navegador
+  empieza con los datos de ejemplo.
+- La concurrencia de RN8 se simula con el botón de prueba; no hay usuarios
+  concurrentes reales.
+- La fecha "de hoy" es la del sistema. El período lectivo está fijo en datos.js.
+- No hay pantallas para anular calificaciones, editar cursadas existentes,
+  dar de alta estudiantes ni marcar egresados.
+- La constancia en PDF es un documento de prueba y lo aclara en su pie.
+
+
+================================================================================
+21. CONVENCIONES PARA MODIFICAR EL PROYECTO
+================================================================================
+- Respetar las capas: reglas y transiciones en entidades; orden del caso de uso
+  y notificaciones en controladores; HTML y eventos en vistas.
+- Una transición de estado nueva va en la entidad y debe coincidir con su DE.
+- Si una acción de la administración afecta a alguien, notificarlo con Notificador.
+- En las vistas, ejecutar acciones con intentar(fn, mensajeDeExito): muestra el
+  error como aviso, guarda los datos y devuelve el resultado o false.
+- Pedir confirmaciones con Dialogo.abrir({...}), nunca alert/confirm/prompt.
+- Escapar todo texto variable con esc().
+- Agregar una pantalla: crear la función de render en la vista y sumar la ruta
+  en RUTAS (js/app.js) con su rol; si va en el menú, sumarla en actualizarMenu().
+- Agregar un script nuevo: incluirlo en index.html respetando el orden de capas.
+- Si cambia la estructura de los datos guardados: actualizar serializar() y
+  deserializar() en repositorio.js y subir la versión de Repositorio.CLAVE.
+- Textos de la interfaz en español rioplatense, en oraciones simples.
+- Usar los tokens de css/tokens.css; no escribir colores sueltos.
+
+
+================================================================================
+22. FLUJO DE TRABAJO CON GIT
+================================================================================
+Copia local del repositorio: C:\Users\avila\Downloads\cursada-repo
+(la carpeta MVP-inscripcion-materias-main es una copia vieja sin Git).
+
+Antes de editar (trae los cambios de los demás):
+  cd C:\Users\avila\Downloads\cursada-repo
+  git pull
+
+Después de editar:
+  git add -A
+  git commit -m "Descripción corta del cambio"
+  git push
+
+Historial principal
+  56150a5  Primera versión (archivos sueltos)
+  e494179  Cursada v2: MVP completo con roles, constancias en PDF y resumen
+  43b254f  Corrige la grilla horaria y desbordes en todas las pantallas
+  (sigue)  Interfaz más clara: inicio con "Para hacer", inscripción paso a paso,
+           páginas separadas y desplegables
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

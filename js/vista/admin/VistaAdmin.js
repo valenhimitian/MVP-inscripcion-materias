@@ -17,34 +17,31 @@ const VistaAdmin = {
     const com = cuenta(D.comisiones, 'estado');
     const fila = (texto, n, href) => `<li><a href="${href}"><span>${texto}</span><b>${n}</b></a></li>`;
 
-    main.innerHTML = encabezado(`Hola, ${esc(D.admin.nombre)}`, `Administración académica · ${PERIODO.nombre}`)
+    const creadas = D.comisiones.filter(c => c.estado === EstadoComision.CREADA).length;
+    const registrados = D.estudiantes.filter(e => e.estado === EstadoEstudiante.REGISTRADO).length;
+    const tareas = [];
+    if (pendIns) tareas.push({ ico: 'bandeja', tono: 'importante', titulo: `${plural(pendIns, 'solicitud de inscripción', 'solicitudes de inscripción')} para revisar`,
+      texto: 'Aprobá o rechazá cada una. Rechazar libera el lugar.', accion: '<a class="btn btn-primario btn-chico" href="#/admin/inscripciones">Revisar</a>' });
+    if (pendTra) tareas.push({ ico: 'tramite', tono: 'importante', titulo: `${plural(pendTra, 'constancia', 'constancias')} por emitir`,
+      texto: 'Al aprobar se genera el PDF y se envía al estudiante.', accion: '<a class="btn btn-primario btn-chico" href="#/admin/tramites">Revisar</a>' });
+    if (registrados) tareas.push({ ico: 'alumnos', titulo: `${plural(registrados, 'estudiante registrado', 'estudiantes registrados')} sin habilitar`,
+      texto: 'No pueden inscribirse hasta que los habilites.', accion: '<a class="btn btn-secundario btn-chico" href="#/admin/estudiantes">Ver</a>' });
+    if (creadas) tareas.push({ ico: 'comisiones', titulo: `${plural(creadas, 'cursada creada', 'cursadas creadas')} sin inscripción abierta`,
+      texto: 'Los estudiantes no la ven hasta que abras la inscripción.', accion: '<a class="btn btn-secundario btn-chico" href="#/admin/cursadas">Ver</a>' });
+
+    const resumen = (titulo, href, filas) => `<div class="resumen-bloque"><div class="resumen-titulo"><h3>${titulo}</h3><a class="chico" href="${href}">Ver</a></div><ul>${filas}</ul></div>`;
+    main.innerHTML = encabezado(`Hola, ${esc(D.admin.nombre)}`, `Administración académica del ${PERIODO.nombre}.`)
       + `<div class="inicio">
-        <div class="lado">
-          <section class="panel pendientes">
-            <div class="panel-titulo"><h2>Para revisar</h2></div>
-            <div class="pendientes-grid">
-              <a href="#/admin/inscripciones" class="${pendIns ? 'hay' : ''}"><b>${pendIns}</b><span>${pendIns === 1 ? 'solicitud de inscripción' : 'solicitudes de inscripción'}</span></a>
-              <a href="#/admin/tramites" class="${pendTra ? 'hay' : ''}"><b>${pendTra}</b><span>${pendTra === 1 ? 'constancia por emitir' : 'constancias por emitir'}</span></a>
-            </div>
-          </section>
-          <section class="panel">
-            <div class="panel-titulo"><h2>Novedades</h2><a class="chico" href="#/admin/notificaciones">Ver todas</a></div>
-            ${listaNotificaciones(Notificador.de(D.admin), 5)}
-          </section>
+        <div class="columna">
+          ${seccion('Para revisar', '', listaTareas(tareas, 'No hay nada pendiente de revisión.'))}
+          ${seccion('Novedades', '', `<div class="panel">${listaNotificaciones(Notificador.de(D.admin), 4)}</div>`, '<a class="chico" href="#/admin/notificaciones">Ver todas</a>')}
         </div>
-        <div class="lado">
-          <section class="panel resumen-estado">
-            <div class="panel-titulo"><h2>Estudiantes</h2><a class="chico" href="#/admin/estudiantes">Ver todos</a></div>
-            <ul>${Object.keys(ETIQUETA_ESTUDIANTE).filter(k => est[k]).map(k => fila(badge(ETIQUETA_ESTUDIANTE[k]), est[k], '#/admin/estudiantes')).join('')}</ul>
-          </section>
-          <section class="panel resumen-estado">
-            <div class="panel-titulo"><h2>Cursadas</h2><a class="chico" href="#/admin/cursadas">Ver todas</a></div>
-            <ul>${Object.keys(ETIQUETA_COMISION).filter(k => com[k]).map(k => fila(badge(ETIQUETA_COMISION[k]), com[k], '#/admin/cursadas')).join('')}</ul>
-          </section>
-          <section class="panel resumen-estado">
-            <div class="panel-titulo"><h2>Docentes</h2><a class="chico" href="#/admin/docentes">Ver todos</a></div>
-            <ul>${fila('Activos', D.docentes.filter(d => d.estaActivo()).length, '#/admin/docentes')}</ul>
-          </section>
+        <div class="columna">
+          ${seccion('Estado general', '', `<div class="panel resumen-estado">
+            ${resumen('Estudiantes', '#/admin/estudiantes', Object.keys(ETIQUETA_ESTUDIANTE).filter(k => est[k]).map(k => fila(badge(ETIQUETA_ESTUDIANTE[k]), est[k], '#/admin/estudiantes')).join(''))}
+            ${resumen('Cursadas', '#/admin/cursadas', Object.keys(ETIQUETA_COMISION).filter(k => com[k]).map(k => fila(badge(ETIQUETA_COMISION[k]), com[k], '#/admin/cursadas')).join(''))}
+            ${resumen('Docentes', '#/admin/docentes', fila('Activos', D.docentes.filter(d => d.estaActivo()).length, '#/admin/docentes'))}
+          </div>`)}
         </div>
       </div>`;
   },
@@ -55,7 +52,7 @@ const VistaAdmin = {
     const pend = todas.filter(i => i.estado === EstadoInscripcion.PENDIENTE).sort((a, b) => a.fecha - b.fecha);
     const revisadas = todas.filter(i => i.fecha.getFullYear() === 2026 && i.fecha.getMonth() >= 6 && [EstadoInscripcion.APROBADA, EstadoInscripcion.RECHAZADA, EstadoInscripcion.EN_CURSO].includes(i.estado)).sort((a, b) => b.fecha - a.fecha);
 
-    main.innerHTML = encabezado('Inscripciones', 'Aprobá o rechazá las solicitudes. Al rechazar, el lugar vuelve a quedar libre en la comisión (RN8).')
+    main.innerHTML = encabezado('Inscripciones', 'Aprobá o rechazá las solicitudes de los estudiantes. Al rechazar, el lugar vuelve a quedar libre en la comisión (RN8).')
       + `<section class="panel">
         <div class="panel-titulo"><h2>Pendientes de revisión</h2><p>${plural(pend.length, 'solicitud', 'solicitudes')}</p></div>
         ${pend.length ? `<div class="tabla-contenedor"><table class="tabla">
@@ -70,15 +67,12 @@ const VistaAdmin = {
               <button class="btn btn-peligro btn-chico" onclick="VistaAdmin.revisarIns('${i.comprobante}', false)">Rechazar</button></div></td></tr>`).join('')}</tbody></table></div>`
           : vacio('No hay solicitudes pendientes', 'Cuando un estudiante confirme una inscripción, aparece acá.')}
       </section>
-      <section class="panel">
-        <div class="panel-titulo"><h2>Revisadas este cuatrimestre</h2></div>
-        ${revisadas.length ? `<div class="tabla-contenedor"><table class="tabla">
+      <div class="seccion">${desplegable('Revisadas este cuatrimestre', revisadas.length ? `<div class="tabla-contenedor"><table class="tabla">
           <thead><tr><th>Comprobante</th><th>Estudiante</th><th>Materia</th><th>Estado</th></tr></thead>
           <tbody>${revisadas.map(i => `<tr><td class="codigo">${i.comprobante}</td><td>${esc(i.estudiante.nombreCompleto())}</td>
             <td>${esc(i.comision.materia.nombre)} <span class="tenue chico">${i.comision.codigo}</span></td>
             <td>${badgeInscripcion(i.estado)}${i.motivoRechazo ? `<br><span class="tenue chico">${esc(i.motivoRechazo)}</span>` : ''}</td></tr>`).join('')}</tbody></table></div>`
-          : '<p class="tenue">Sin solicitudes revisadas.</p>'}
-      </section>`;
+          : '<p class="tenue">Sin solicitudes revisadas.</p>', { contador: revisadas.length })}</div>`;
   },
 
   async revisarIns(comprobante, aprobar) {
@@ -102,7 +96,7 @@ const VistaAdmin = {
     const resueltos = todos.filter(c => c.estado !== EstadoCertificado.SOLICITADO).sort((a, b) => (b.fechaEmision || b.fechaSolicitud) - (a.fechaEmision || a.fechaSolicitud));
     const tipo = c => c.tipo === TipoCertificado.EXAMEN ? `Examen<br><span class="chico tenue">${esc(c.inscripcion.comision.materia.nombre)} · ${fmtFecha(c.fechaExamen)}</span>` : 'Alumno regular';
 
-    main.innerHTML = encabezado('Trámites', 'Al aprobar una constancia se genera el PDF, se envía al correo del estudiante y queda para descargar en su perfil.')
+    main.innerHTML = encabezado('Trámites', 'Constancias que pidieron los estudiantes. Al aprobar una, se genera el PDF, se envía a su correo y queda para descargar en su perfil.')
       + `<section class="panel">
         <div class="panel-titulo"><h2>Constancias por emitir</h2><p>${plural(pend.length, 'solicitud', 'solicitudes')}</p></div>
         ${pend.length ? `<div class="tabla-contenedor"><table class="tabla">
@@ -116,23 +110,17 @@ const VistaAdmin = {
               <button class="btn btn-peligro btn-chico" onclick="VistaAdmin.revisarCert('${c.numero}', false)">Rechazar</button></div></td></tr>`).join('')}</tbody></table></div>`
           : vacio('No hay constancias por emitir', 'Cuando un estudiante pida una constancia, aparece acá.')}
       </section>
-      <section class="panel">
-        <div class="panel-titulo"><h2>Emitidas y rechazadas</h2></div>
-        ${resueltos.length ? `<div class="tabla-contenedor"><table class="tabla">
+      <div class="seccion">${desplegable('Emitidas y rechazadas', resueltos.length ? `<div class="tabla-contenedor"><table class="tabla">
           <thead><tr><th>N.º</th><th>Estudiante</th><th>Constancia</th><th>Estado</th><th>Acción</th></tr></thead>
           <tbody>${resueltos.map(c => `<tr><td class="codigo">${c.numero}</td><td>${esc(c.estudiante.nombreCompleto())}</td><td>${tipo(c)}</td>
             <td>${badgeCertificado(c.estado)}${c.motivoRechazo ? `<br><span class="chico tenue">${esc(c.motivoRechazo)}</span>` : ''}</td>
             <td>${c.estaDisponible() ? `<button class="btn btn-secundario btn-chico" onclick="VistaAdmin.pdf('${c.numero}')">${icono('descargar')} PDF</button>` : '—'}</td></tr>`).join('')}</tbody></table></div>`
-          : '<p class="tenue">Todavía no se emitieron constancias.</p>'}
-      </section>
-      <section class="panel">
-        <div class="panel-titulo"><h2>Correos enviados</h2><p>Envío simulado: el MVP registra el correo y su adjunto</p></div>
-        ${D.correos.length ? `<ul class="correos">${D.correos.slice(0, 8).map(m => `<li>${icono('correo')}<div>
+          : '<p class="tenue">Todavía no se emitieron constancias.</p>', { contador: resueltos.length })}</div>
+      <div class="seccion">${desplegable('Correos enviados', `<p class="chico tenue" style="margin-bottom:var(--e3)">Envío simulado: el MVP registra cada correo con su adjunto.</p>` + (D.correos.length ? `<ul class="correos">${D.correos.slice(0, 8).map(m => `<li>${icono('correo')}<div>
           <b>${esc(m.asunto)}</b><span class="chico tenue">Para ${esc(m.para)} · ${fmtFecha(m.fecha)}</span>
           <p class="chico">${esc(m.cuerpo)}</p>
           ${m.adjunto ? `<button class="btn-texto chico" onclick="VistaAdmin.pdf('${m.adjunto}')">${icono('tramite')} constancia-${m.adjunto}.pdf</button>` : ''}</div></li>`).join('')}</ul>`
-          : '<p class="tenue">Sin correos enviados.</p>'}
-      </section>`;
+          : '<p class="tenue">Sin correos enviados.</p>'), { contador: D.correos.length })}</div>`;
   },
 
   async revisarCert(numero, aprobar) {
@@ -347,17 +335,12 @@ const VistaAdmin = {
   },
 
   // ---------- Notificaciones y perfil ----------
-  notificaciones(main) {
-    const lista = Notificador.de(D.admin);
-    main.innerHTML = encabezado('Notificaciones') + `<section class="panel">
-      <div class="panel-titulo"><h2>Recientes</h2>${lista.some(n => !n.leida) ? '<button class="btn btn-secundario btn-chico" onclick="App.marcarTodas()">Marcar todas como leídas</button>' : ''}</div>
-      ${listaNotificaciones(lista)}</section>`;
-  },
+  notificaciones(main) { paginaNotificaciones(main, D.admin); },
   perfil(main) {
     const a = D.admin;
     main.innerHTML = `<section class="perfil-cabeza"><span class="avatar grande admin">${iniciales(a)}</span>
       <div><h1>${esc(a.nombreCorto())}</h1><p>Administración académica · DNI ${fmtDni(a.dni)} · ${esc(a.email)}</p></div></section>
-      <div class="dos-col">${formularioClave('VistaAdmin')}
+      <div class="dos-col"><div class="columna">${seccion('Contraseña', '', formularioClave('VistaAdmin'))}</div>
         <section class="panel"><div class="panel-titulo"><h2>Datos de prueba</h2></div>
           <p class="chico tenue" style="margin-bottom:var(--e4)">Los datos se guardan en este navegador. Reinicialos para volver al estado inicial de la demo.</p>
           <button class="btn btn-peligro" onclick="App.reiniciarDatos()">Reiniciar datos de la demo</button></section></div>`;

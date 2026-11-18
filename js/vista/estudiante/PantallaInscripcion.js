@@ -51,22 +51,28 @@ const PantallaInscripcion = {
     }
 
     const p = this.paso();
-    const clase = n => n < p ? 'hecho' : n === p ? 'actual' : '';
     const activas = est.consultarInscripciones().filter(i => i.estaActiva());
+    // Un paso por vez: los pasos ya hechos se pueden tocar para volver
+    const paso = (n, texto, volver) => {
+      const estado = n < p ? 'hecho' : n === p ? 'actual' : '';
+      const contenido = n < p && p < 4 ? `<button type="button" onclick="${volver}">${texto}</button>` : `<span>${texto}</span>`;
+      return `<li class="${estado}" ${n === p ? 'aria-current="step"' : ''}>${contenido}</li>`;
+    };
+    const contenidoPaso = this.nueva ? this.htmlComprobante() : p === 1 ? this.htmlMaterias() : p === 2 ? this.htmlComisiones() : this.htmlResumen();
 
     main.innerHTML = encabezado + `
       <ol class="pasos" aria-label="Pasos de la inscripción">
-        <li class="${clase(1)}" ${p === 1 ? 'aria-current="step"' : ''}>Materia</li>
-        <li class="${clase(2)}" ${p === 2 ? 'aria-current="step"' : ''}>Comisión</li>
-        <li class="${clase(3)}" ${p === 3 ? 'aria-current="step"' : ''}>Confirmación</li>
+        ${paso(1, 'Materia', 'PantallaInscripcion.volverAMaterias()')}
+        ${paso(2, 'Comisión', 'PantallaInscripcion.noConfirmar()')}
+        ${paso(3, 'Confirmación', '')}
       </ol>
       <div class="inscripcion">
         <div class="flujo">
-          ${this.nueva ? this.htmlComprobante() : this.htmlMaterias() + this.htmlComisiones() + this.htmlResumen()}
+          ${contenidoPaso}
           ${App.demo && !this.nueva ? this.htmlPruebas() : ''}
         </div>
         <aside class="semana panel">
-          <div class="panel-titulo"><h2>Cómo queda tu semana</h2></div>
+          <div class="panel-titulo"><div><h2>Cómo queda tu semana</h2>${this.comision && !this.nueva ? '<p>En amarillo, la comisión que elegiste.</p>' : ''}</div></div>
           ${grillaSemanal(itemsDeInscripciones(activas), this.nueva ? null : this.comision, true)}
           ${referenciasGrilla(!!this.comision && !this.nueva)}
           ${this.comision && !this.nueva && activas.some(i => seSuperponen(i.comision, this.comision))
@@ -84,14 +90,15 @@ const PantallaInscripcion = {
       const abiertas = m.consultarComisionesDisponibles().filter(c => c.estado === EstadoComision.ABIERTA).length;
       const correl = m.correlativas.length ? `Correlativa: ${m.correlativas.map(c => esc(c.nombre)).join(', ')}` : 'Sin correlativas';
       const ajena = !this.carrera.contieneMateria(m) ? ' · <span class="ajena">otra carrera</span>' : '';
-      return `<button type="button" class="materia" aria-pressed="${this.materia === m}" onclick="PantallaInscripcion.elegirMateria(${k})">
+      return `<button type="button" class="materia ${abiertas ? '' : 'sin-oferta'}" aria-pressed="${this.materia === m}" onclick="PantallaInscripcion.elegirMateria(${k})">
         <b>${esc(m.nombre)}</b>
-        <small>${m.codigo} · ${correl}${ajena}</small>
-        <span class="disp">${abiertas ? `${abiertas} comisión${abiertas > 1 ? 'es' : ''} abierta${abiertas > 1 ? 's' : ''}` : 'Sin comisiones abiertas'}</span>
+        <small>${correl}${ajena}</small>
+        <span class="disp">${abiertas ? `${abiertas} ${abiertas > 1 ? 'comisiones abiertas' : 'comisión abierta'}` : 'Sin comisiones abiertas'}</span>
+        <span class="materia-codigo">${m.codigo}</span>
       </button>`;
     }).join('');
     return `<section class="panel">
-      <div class="panel-titulo"><h2>Elegí la materia</h2><p>Solo se listan las materias de tu carrera</p></div>
+      <div class="panel-titulo"><div><h2>¿A qué materia te querés inscribir?</h2><p>Estas son las materias de tu carrera.</p></div></div>
       <div class="materias">${items}</div>
     </section>`;
   },
@@ -104,8 +111,17 @@ const PantallaInscripcion = {
     if (r.hayAbiertas) t(`18: mostrarComisiones(${r.comisiones.length})`);
     else { t('16: mostrarMensaje(aviso)'); this.aviso = { tipo: 'info', titulo: 'Esta materia no tiene comisiones abiertas', regla: 'A4' }; }
     this.render();
-    document.getElementById('paso-comision')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.subir();
   },
+
+  volverAMaterias() {
+    Object.assign(this, { materia: null, comision: null, validacion: null, error: null, aviso: null });
+    this.render();
+    this.subir();
+  },
+
+  // Vuelve al principio de la pantalla al cambiar de paso
+  subir() { window.scrollTo({ top: 0, behavior: 'smooth' }); },
 
   // ---------- Paso 2: comisión ----------
   htmlComisiones() {
@@ -120,8 +136,8 @@ const PantallaInscripcion = {
       // el controlador informa el motivo exacto (E6.1 / E6.4), como indica el DS01.
       return `<button type="button" class="comision ${abierta ? '' : 'cerrada'}" aria-pressed="${this.comision === c}" onclick="PantallaInscripcion.elegirComision(${k})">
         <span class="radio" aria-hidden="true"></span>
-        <span class="com-info"><b>${c.codigo}</b> <span class="tenue chico">· ${esc(c.docente.nombreCorto())}</span>
-          <small>${c.horario()} · Aula ${esc(c.aula)}</small></span>
+        <span class="com-info"><b>${c.codigo}</b>
+          ${datosConIcono([['reloj', horarioLargo(c)], ['aula', `Aula ${esc(c.aula)}`], ['persona', esc(c.docente.nombreCorto())]])}</span>
         <span class="cupo">${badgeComision(c.estado)}
           ${abierta ? `<span class="chico tenue">${c.cupoDisponible} de ${c.cupoMaximo} lugares</span><span class="cupo-barra"><i style="width:${ocupado}%"></i></span>` : ''}
         </span>
@@ -131,10 +147,12 @@ const PantallaInscripcion = {
     let mensajes = '';
     if (this.aviso) mensajes += aviso(this.aviso.tipo, this.aviso.titulo, this.aviso.texto || '', this.aviso.regla || '');
     if (this.error) mensajes += aviso('err', 'No podés inscribirte en esta comisión', ' ' + esc(this.error.mensaje), this.error.codigo);
-    if (this.validacion) mensajes += this.htmlValidaciones(this.validacion.resultado);
+    // El detalle de las validaciones solo aparece cuando alguna falla
+    if (this.validacion && !this.validacion.ok) mensajes += this.htmlValidaciones(this.validacion.resultado);
 
     return `<section class="panel" id="paso-comision">
-      <div class="panel-titulo"><h2>Elegí la comisión</h2><p>${esc(this.materia.nombre)}</p></div>
+      <div class="panel-titulo"><div><h2>Elegí la comisión</h2><p>${esc(this.materia.nombre)}: compará horario, aula, docente y lugares libres.</p></div>
+        <button class="btn btn-secundario btn-chico" onclick="PantallaInscripcion.volverAMaterias()">Cambiar materia</button></div>
       <div class="comisiones">${items}</div>
       ${mensajes ? `<div style="margin-top:var(--e4)">${mensajes}</div>` : ''}
     </section>`;
@@ -169,8 +187,8 @@ const PantallaInscripcion = {
       this.comision = null;
     }
     this.render();
-    const destino = r.ok ? 'paso-confirmacion' : 'paso-comision';
-    document.getElementById(destino)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (r.ok) this.subir();
+    else document.querySelector('#paso-comision .aviso')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   },
 
   // ---------- Paso 3: confirmación ----------
@@ -180,9 +198,11 @@ const PantallaInscripcion = {
     }
     const c = this.comision;
     return `<section class="panel" id="paso-confirmacion">
-      <div class="panel-titulo"><h2>Confirmá la inscripción</h2><p>Revisá los datos antes de enviar la solicitud</p></div>
+      <div class="panel-titulo"><div><h2>Revisá y confirmá</h2><p>Chequeá que los datos sean los que querés.</p></div></div>
       ${this.datosResumen(c)}
-      <p class="chico tenue" style="margin-bottom:var(--e4)">Tu solicitud queda pendiente hasta que la administración académica la revise. El lugar en la comisión se reserva al confirmar.</p>
+      <div class="requisitos-ok">${icono('ok')}<span>Cumplís los cuatro requisitos para inscribirte.</span></div>
+      ${desplegable('Ver requisitos verificados', this.htmlValidaciones(this.validacion.resultado), { simple: true })}
+      <p class="chico tenue" style="margin:var(--e4) 0">Al confirmar se reserva tu lugar. La solicitud queda pendiente hasta que la administración académica la revise, y te avisamos el resultado.</p>
       <div class="acciones derecha">
         <button class="btn btn-secundario" onclick="PantallaInscripcion.noConfirmar()">Elegir otra comisión</button>
         <button class="btn btn-exito" onclick="PantallaInscripcion.confirmar()">Confirmar inscripción</button>
@@ -195,7 +215,7 @@ const PantallaInscripcion = {
       <div><dt>Materia</dt><dd>${esc(c.materia.nombre)}</dd></div>
       <div><dt>Carrera</dt><dd>${esc(this.carrera.nombre)}</dd></div>
       <div><dt>Comisión</dt><dd>${c.codigo}, aula ${esc(c.aula)}</dd></div>
-      <div><dt>Día y horario</dt><dd>${c.horario()}</dd></div>
+      <div><dt>Día y horario</dt><dd>${horarioLargo(c)}</dd></div>
       <div><dt>Docente</dt><dd>${esc(c.docente.nombreCorto())}</dd></div>
       ${estadoHtml ? `<div><dt>Estado</dt><dd>${estadoHtml}</dd></div>` : ''}
     </dl>`;
@@ -206,6 +226,7 @@ const PantallaInscripcion = {
     t('47: mostrarComisiones(): no se registra nada');
     Object.assign(this, { comision: null, validacion: null, error: null });
     this.render();
+    this.subir();
   },
 
   confirmar() {

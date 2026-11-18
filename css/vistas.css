@@ -315,3 +315,137 @@ a.comision-card:hover { border-color: var(--tinta); }
 .inicio > *, .inscripcion > *, .dos-col > *, .tramites > *, .docente-notas > *,
 .docentes-layout > *, .tarjetas > *, .lado > *, .flujo > * { min-width: 0; }
 .tabla td .acciones { flex-wrap: nowrap; }
+
+/* =====================================================================
+   v2.2 · Interfaz más clara
+   Una idea por bloque, aire entre secciones, datos con íconos en vez de
+   líneas con puntos e información secundaria plegada.
+   ===================================================================== */
+
+/* Ritmo general */
+.encabezado { margin-bottom: var(--e6); }
+.encabezado h1 { display: flex; align-items: center; gap: var(--e3); flex-wrap: wrap; }
+.encabezado h1 .badge { font-family: var(--f-texto); }
+.encabezado .datos-icono { margin-top: var(--e3); }
+.seccion + .seccion, .columna > .seccion + .seccion { margin-top: var(--e6); }
+.seccion-cabeza { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--e3); margin-bottom: var(--e3); flex-wrap: wrap; }
+.seccion-cabeza h2 { font-size: 1.15rem; }
+.seccion-cabeza p { color: var(--grafito); font-size: var(--t-sm); margin-top: 2px; }
+.columna { min-width: 0; }
+.inicio { gap: var(--e6); grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.dos-col { gap: var(--e5); }
+.opcional { font-weight: 400; color: var(--grafito); }
+
+/* Datos con ícono */
+.datos-icono { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: var(--t-sm); color: var(--grafito); }
+.datos-icono li { display: inline-flex; align-items: center; gap: 6px; }
+.datos-icono svg { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Lista "Para hacer" */
+.tareas { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--e2); }
+.tarea {
+  display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: var(--e4); align-items: center;
+  padding: 14px var(--e4); background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-panel);
+}
+.tarea-ico { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--birome-cl); color: var(--birome-osc); }
+.tarea-ico svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.tarea.importante { border-color: #EFD78E; background: #FFFCF0; }
+.tarea.importante .tarea-ico { background: var(--resaltador); color: var(--tinta); }
+.tarea.error { border-color: #F0BDB6; background: #FFF8F7; }
+.tarea.error .tarea-ico { background: var(--err-bg); color: var(--err); }
+.tarea b { display: block; line-height: 1.3; }
+.tarea p { color: var(--grafito); font-size: var(--t-sm); margin-top: 2px; }
+@media (max-width: 600px) { .tarea { grid-template-columns: 38px minmax(0, 1fr); } .tarea > .btn { grid-column: 2; justify-self: start; } }
+.al-dia { display: flex; gap: var(--e3); align-items: center; padding: var(--e4); border-radius: var(--r-panel); background: var(--ok-bg); color: var(--ok); font-weight: 700; }
+.al-dia svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Filas de materias (inicio) */
+.filas-materia { list-style: none; padding: 0; margin: 0; }
+.filas-materia > li { display: flex; justify-content: space-between; align-items: center; gap: var(--e3); padding: 12px 0; border-bottom: 1px solid var(--linea-suave); }
+.filas-materia > li:first-child { padding-top: 0; }
+.filas-materia b { display: block; margin-bottom: 4px; }
+.enlace-flecha { display: inline-flex; align-items: center; gap: 6px; margin-top: var(--e4); font-weight: 700; font-size: var(--t-sm); text-decoration: none; }
+.enlace-flecha svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* Desplegables */
+details.desplegable { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-panel); }
+details.desplegable > summary {
+  list-style: none; cursor: pointer; padding: var(--e4) var(--e5);
+  display: flex; justify-content: space-between; align-items: center; gap: var(--e3);
+  font-family: var(--f-display); font-weight: 650; font-size: 1.05rem;
+}
+details.desplegable > summary::-webkit-details-marker { display: none; }
+details.desplegable > summary::after {
+  content: ""; width: 9px; height: 9px; flex: none; margin-right: 4px;
+  border-right: 2px solid var(--grafito); border-bottom: 2px solid var(--grafito);
+  transform: rotate(45deg) translateY(-3px); transition: transform .15s;
+}
+details.desplegable[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
+details.desplegable > summary:hover { color: var(--birome-osc); }
+.desplegable-cuerpo { padding: 0 var(--e5) var(--e5); }
+.contador-gris { display: inline-block; min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--neutro-bg); color: var(--neutro); font-family: var(--f-texto); font-size: var(--t-xs); font-weight: 700; text-align: center; margin-left: 6px; vertical-align: 2px; }
+details.desplegable.simple { border: 0; border-top: 1px solid var(--linea-suave); border-radius: 0; background: none; }
+details.desplegable.simple > summary { padding: var(--e3) 0; font-family: var(--f-texto); font-size: var(--t-sm); font-weight: 700; color: var(--birome-osc); justify-content: flex-start; }
+details.desplegable.simple > .desplegable-cuerpo { padding: 0 0 var(--e2); }
+
+/* Tarjetas de materia (Mi cursada) */
+.materia-card { gap: var(--e4); }
+.materia-card header { align-items: center; }
+.materia-card .datos-icono { flex-direction: column; gap: 6px; }
+.bloque-dato h4 { font-size: var(--t-xs); color: var(--grafito); font-weight: 700; margin: 0 0 6px; }
+.notas { grid-template-columns: repeat(4, 1fr); }
+.nota { padding: 10px 6px; }
+.nota span { font-size: var(--t-xs); }
+.asistencia { display: grid; grid-template-columns: 1fr auto; gap: 4px var(--e3); align-items: center; }
+.asistencia .tenue { grid-column: 1 / -1; }
+.barra-progreso { display: block; height: 8px; border-radius: 999px; background: var(--linea-suave); overflow: hidden; }
+.barra-progreso i { display: block; height: 100%; background: var(--ok); border-radius: 999px; }
+.nota-estado { background: var(--papel); border-radius: var(--r-control); padding: var(--e3) var(--e4); font-size: var(--t-sm); color: var(--grafito); }
+.materia-card footer { display: flex; flex-wrap: wrap; gap: var(--e2); align-items: center; padding-top: var(--e3); border-top: 1px solid var(--linea-suave); margin-top: auto; }
+.comprobante-txt { margin-left: auto; }
+.materia-card .avisos-materia { margin-top: var(--e2); }
+
+/* Trámites del estudiante */
+.tramites { gap: var(--e6); }
+.lista-tramites { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--e3); }
+.tramite { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--r-panel); padding: var(--e4) var(--e5); display: grid; gap: 4px; }
+.tramite-cabeza { display: flex; justify-content: space-between; align-items: center; gap: var(--e3); }
+.tramite .acciones { margin-top: var(--e2); }
+
+/* Inscripción paso a paso */
+.pasos li button { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pasos li > span, .pasos li > button { min-width: 0; }
+.panel-titulo > div > p { margin-top: 2px; }
+.materia { grid-template-columns: 1fr auto; padding: 14px 16px; }
+.materia .materia-codigo { grid-column: 2; grid-row: 2; justify-self: end; font-family: var(--f-codigo); font-size: 11px; color: var(--grafito); }
+.materia .disp { grid-row: 1; font-weight: 700; color: var(--ok); }
+.materia.sin-oferta .disp { color: var(--grafito); font-weight: 400; }
+.com-info .datos-icono { margin-top: 4px; }
+.comision { padding: 14px 16px; }
+.requisitos-ok { display: flex; gap: var(--e2); align-items: center; color: var(--ok); font-weight: 700; font-size: var(--t-sm); margin-bottom: var(--e2); }
+.requisitos-ok svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+@media (max-width: 600px) {
+  .materia .disp, .materia .materia-codigo { grid-column: 1; grid-row: auto; justify-self: start; }
+}
+
+/* Resumen de la administración */
+.resumen-bloque + .resumen-bloque { margin-top: var(--e5); padding-top: var(--e4); border-top: 1px solid var(--linea-suave); }
+.resumen-titulo { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--e2); }
+.resumen-titulo h3 { font-size: var(--t-md); }
+.resumen-estado .resumen-bloque ul { list-style: none; padding: 0; margin: 0; }
+.resumen-estado .resumen-bloque li { padding: 8px 0; }
+.tarjetas.dos { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+/* Pie del menú lateral: período y modo demo */
+.lateral-pie { display: grid; gap: var(--e3); }
+.lateral-pie p { line-height: 1.45; }
+.lateral-pie .interruptor { font-size: var(--t-xs); color: var(--grafito); }
+
+/* Reglas adaptables de v2.2 (van al final para ganar a las de arriba) */
+@container contenido (max-width: 860px) { .inicio { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .materia { grid-template-columns: 1fr; }
+  .notas { grid-template-columns: repeat(2, 1fr); }
+  .comprobante-txt { margin-left: 0; }
+}
+@media (max-width: 860px) { .lateral-pie { display: none; } }

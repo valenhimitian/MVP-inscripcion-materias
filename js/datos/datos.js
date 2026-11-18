@@ -149,7 +149,7 @@ function cargarDatos() {
   const N = (para, titulo, texto, enlace, fecha) => { const n = Notificador.notificar(para, titulo, texto, enlace, fecha); return n; };
   N(ivan, 'Tu constancia está lista', `Te enviamos la constancia ${cIvan.numero} a tu correo. También podés descargarla desde Trámites.`, '#/perfil/tramites', f(21, 8, 2026)).leida = true;
   N(ivan, 'Inscripción aprobada', 'Tu inscripción a Inglés Técnico II, COM-01, fue aprobada.', '#/perfil/cursada', f(6, 8, 2026)).leida = true;
-  N(ivan, 'Nueva calificación', 'Se registró tu nota de PARCIAL en Base de Datos I: 7.', '#/perfil/cursada', f(9, 10, 2026));
+  N(ivan, 'Nueva calificación', 'Se registró tu nota del parcial de Base de Datos I: 7.', '#/perfil/cursada', f(9, 10, 2026));
   N(ivan, 'Aviso de Base de Datos I', 'Recuperatorio del primer parcial: viernes 27/11 en el aula 110.', '#/perfil/cursada', f(13, 11, 2026));
   [martina, camila, sofia].forEach(e => N(e, 'Aviso de Base de Datos I', 'Recuperatorio del primer parcial: viernes 27/11 en el aula 110.', '#/perfil/cursada', f(13, 11, 2026)));
   N(medina, 'Comisión asignada', 'Se te asignó Diseño de Aplicaciones Web/Móviles, COM-01 (lunes 18 a 22 h).', '#/docente', f(1, 8, 2026)).leida = true;

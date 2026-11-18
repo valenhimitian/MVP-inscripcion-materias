@@ -121,8 +121,6 @@ const App = {
   // ---------- Barra superior ----------
   actualizarBarra() {
     const s = this.sesion;
-    $('barraPeriodo').textContent = PERIODO.nombre;
-    $('chkDemo').checked = this.demo;
     $('btnSalir').classList.toggle('oculto', !s);
     $('marcaInicio').href = s ? INICIO_POR_ROL[s.rol] : '#/ingresar';
     if (!s) { $('usuario').innerHTML = '<a class="btn btn-primario btn-chico" href="#/ingresar">Ingresar</a>'; $('campana').innerHTML = ''; return; }
@@ -148,6 +146,7 @@ const App = {
       enlace('#/inscripcion', 'inscribir', 'Inscripción');
       enlace('#/perfil/cursada', 'cursada', 'Mi cursada');
       enlace('#/perfil/tramites', 'tramite', 'Trámites', s.usuario.certificados.filter(c => c.estado === EstadoCertificado.SOLICITADO).length);
+      enlace('#/perfil/notificaciones', 'campana', 'Notificaciones', Notificador.sinLeer(s.usuario));
       enlace('#/perfil', 'perfil', 'Mi perfil');
     } else if (s && s.rol === 'docente') {
       enlace('#/docente', 'inicio', 'Inicio');
@@ -164,16 +163,23 @@ const App = {
       enlace('#/admin/cursadas', 'comisiones', 'Cursadas');
       enlace('#/admin/estudiantes', 'alumnos', 'Estudiantes');
       enlace('#/admin/docentes', 'docente', 'Docentes');
+      grupo('Cuenta');
+      enlace('#/admin/notificaciones', 'campana', 'Notificaciones', Notificador.sinLeer(D.admin));
       enlace('#/admin/perfil', 'perfil', 'Mi perfil');
     }
     if (this.demo || !s) { grupo('Demo'); enlace('#/guia', 'guia', 'Guía de la demo'); }
 
     // El enlace activo es el de prefijo más largo que coincide con la ruta
-    const activo = items.filter(i => i.href && (actual === i.href || actual.startsWith(i.href + '/')))
+    const activo = items.filter(i => i.href && (actual === i.href || (i.href !== '#/perfil' && actual.startsWith(i.href + '/'))))
       .sort((a, b) => b.href.length - a.href.length)[0];
     $('menu').innerHTML = items.map(i => i.grupo ? `<div class="lateral-grupo">${i.grupo}</div>`
       : `<a href="${i.href}" title="${esc(i.texto)}${i.sub ? ' · ' + esc(i.sub) : ''}" ${i === activo ? 'aria-current="page"' : ''}>${icono(i.ico)}<span class="menu-txt"><span>${esc(i.texto)}</span>${i.sub ? `<small>${esc(i.sub)}</small>` : ''}</span>${i.n ? `<span class="contador">${i.n}</span>` : ''}</a>`).join('')
-      + (s ? `<div class="lateral-pie chico tenue">${PERIODO.nombre}<br>Inscripción hasta el ${fmtFechaLarga(PERIODO.cierreInscripcion)}</div>` : '');
+      + `<div class="lateral-pie">
+          ${s ? `<p class="chico"><b>${PERIODO.nombre}</b><br><span class="tenue">Inscripción abierta hasta el ${fmtFechaLarga(PERIODO.cierreInscripcion)}</span></p>` : ''}
+          <label class="interruptor" title="Muestra la secuencia DS01 o DS02 al costado y las herramientas para la defensa del TP">
+            <input type="checkbox" id="chkDemo" ${this.demo ? 'checked' : ''} onchange="App.alternarDemo(this.checked)"> Modo demo
+          </label>
+        </div>`;
   },
 
   // ---------- Notificaciones ----------
@@ -188,7 +194,7 @@ const App = {
   // ---------- Modo demo y traza de los diagramas de secuencia ----------
   alternarDemo(activo) {
     this.demo = activo;
-    $('chkDemo').checked = activo;
+    const chk = $('chkDemo'); if (chk) chk.checked = activo;
     try { localStorage.setItem('cursada.demo', activo ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
     this.actualizarMenu();
     this.renderTraza();

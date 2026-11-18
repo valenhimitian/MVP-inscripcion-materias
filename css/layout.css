@@ -86,7 +86,7 @@
 @media (max-width: 860px) {
   .barra { padding: 0 var(--e4); }
   .marca-sub, .barra-periodo { display: none; }
-  .app, .app.con-traza { grid-template-columns: minmax(0, 1fr); }
+  .app, .app.con-traza { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; }
   .lateral {
     flex-direction: row; overflow-x: auto; padding: var(--e2);
     border-right: 0; border-bottom: 1px solid var(--linea);
