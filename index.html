@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal de Autogestión – Inscripción a Materias (MVP)</title>
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<header>
+  <h1>Portal de Autogestión - Universidad</h1>
+  <span class="sp"></span>
+  <span id="chip" class="chip oculto">&#128100; <span id="chipTxt"></span></span>
+</header>
+<nav class="no-print">
+  <button id="tab-est" class="act" onclick="mostrarVista('est')">Portal del estudiante</button>
+  <button id="tab-adm" onclick="mostrarVista('adm')">Panel de administración</button>
+  <button id="tab-esc" onclick="mostrarVista('esc')">Escenarios de prueba</button>
+  <span style="flex:1"></span>
+  <button onclick="alternarTraza()" id="btnTraza">Mostrar secuencia (DS01)</button>
+  <button onclick="reiniciar()">&#8634; Reiniciar datos</button>
+</nav>
+
+<main>
+<!-- =================== PORTAL DEL ESTUDIANTE =================== -->
+<section id="v-est">
+ <div class="grid" id="grid">
+  <div>
+    <div class="card no-print">
+      <h2>Ingreso al portal (autenticación simulada)</h2>
+      <div class="fila">
+        <select id="selEstudiante"></select>
+        <button class="btn pri" onclick="ingresar()">Ingresar</button>
+        <button class="btn claro" id="btnSalir" onclick="salir()" disabled>Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div id="zonaEstudiante" class="oculto">
+      <div id="exito"></div>
+
+      <div class="card">
+        <h2>Contexto académico</h2>
+        <div class="kv" id="contexto"></div>
+      </div>
+
+      <div id="bloqueo"></div>
+
+      <div id="asistente">
+        <div class="pasos"><div id="p1">1. Materia</div><div id="p2">2. Comisión</div><div id="p3">3. Confirmación</div></div>
+
+        <div class="card">
+          <h2>Paso 1: Seleccione la Materia (solo materias de su carrera)</h2>
+          <select id="selMateria" onchange="elegirMateria()"></select>
+        </div>
+
+        <div class="card" id="paso2">
+          <h2>Paso 2: Comisiones Disponibles</h2>
+          <div id="tablaComisiones" class="muted">Primero seleccione una materia.</div>
+          <div id="mensajes"></div>
+        </div>
+
+        <div class="card" id="paso3">
+          <h2>Paso 3: Resumen de la inscripción</h2>
+          <div id="resumen" class="muted">Se completa cuando la comisión elegida cumple todas las validaciones.</div>
+        </div>
+      </div>
+
+      <div class="card" id="misInscripciones">
+        <h2>Mis inscripciones (RF22 · RF23)</h2>
+        <div id="tablaMisInscripciones"></div>
+      </div>
+
+      <div class="card prueba no-print">
+        <h2>Panel de pruebas (solo para la demo)</h2>
+        <label class="muted" style="display:block;margin-bottom:6px"><input type="checkbox" id="chkOtraCarrera" onchange="cargarMaterias()"> Listar también materias de otras carreras, para probar la validación RN3 (E6.2)</label>
+        <button class="btn claro sm" id="btnConcurrencia" onclick="simularConcurrencia()" disabled>Simular que otros estudiantes ocupan los cupos restantes de la comisión elegida (E9)</button>
+      </div>
+    </div>
+  </div>
+
+  <aside id="colTraza" class="oculto">
+    <div class="card">
+      <h2>Secuencia ejecutada (DS01)</h2>
+      <p class="muted" style="margin-top:0">Mensajes numerados igual que el diagrama de secuencia.</p>
+      <div class="traza" id="traza">Ingrese con un estudiante para ver la secuencia.</div>
+    </div>
+  </aside>
+ </div>
+</section>
+
+<!-- =================== ADMINISTRACIÓN =================== -->
+<section id="v-adm" class="oculto">
+  <div class="card">
+    <h2>Revisar solicitudes de inscripción</h2>
+    <p class="muted" style="margin-top:0">El Administrador es el actor secundario de CU01: recibe las solicitudes Pendientes y las aprueba o rechaza (DE01). Al rechazar se libera el cupo (RN8).</p>
+    <div id="tablaPendientes"></div>
+  </div>
+  <div class="card">
+    <h2>Comisiones (DE02)</h2>
+    <div id="tablaComisionesAdm"></div>
+  </div>
+</section>
+
+<!-- =================== ESCENARIOS =================== -->
+<section id="v-esc" class="oculto">
+  <div class="card">
+    <h2>Escenarios de prueba</h2>
+    <div class="esc"><b>1. Inscripción exitosa.</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-01 → Confirmar. Queda <span class="badge b-warn">Pendiente</span> con comprobante. En "Panel de administración" se aprueba (<span class="badge b-ok">Aprobada</span>) o se rechaza (<span class="badge b-err">Rechazada</span>, libera el cupo).</div>
+    <div class="esc"><b>2. Comisión sin cupo (E6.1).</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-02 (Completa).</div>
+    <div class="esc"><b>3. Comisión fuera de período (E6.4).</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-03 (Creada). Desde el Panel de administración se puede abrir su inscripción (DE02: Creada → Abierta).</div>
+    <div class="esc"><b>4. Ya inscripto (E6).</b> Iván Avila → Base de Datos I → COM-04 (ya cursa Base de Datos I en COM-02).</div>
+    <div class="esc"><b>5. Correlativas incumplidas (E6.3).</b> Iván Avila → Programación Web II → COM-01 (falta Programación Web I).</div>
+    <div class="esc"><b>6. Materia de otra carrera (E6.2).</b> Iván Avila → marcar en el Panel de pruebas "Listar también materias de otras carreras" → Análisis Matemático I → COM-01.</div>
+    <div class="esc"><b>7. Último cupo y concurrencia.</b> Iván Avila → Visualización e Interfaces → COM-01 (queda 1 cupo) → Confirmar: la comisión pasa a <span class="badge b-err">Completa</span>. Variante E9: antes de confirmar, usar "Simular que otros estudiantes ocupan los cupos restantes".</div>
+    <div class="esc"><b>8. Estudiante no habilitado (E2).</b> Tomás Herrera (Inhabilitado) o Lucía Fernández (Registrado, sin documentación).</div>
+    <div class="esc"><b>9. Carrera activa por Matrícula.</b> Camila Ruiz: egresó de Ingeniería en Informática y tiene matrícula activa en la Tecnicatura; el sistema usa getCarreraActiva().</div>
+  </div>
+</section>
+</main>
+
+<script src="js/modelo.js"></script>
+<script src="js/controlador.js"></script>
+<script src="js/datos.js"></script>
+<script src="js/pantalla.js"></script>
+</body>
+</html>
