@@ -4,20 +4,6 @@
    Los números de la traza son los números de mensaje del diagrama.
    ===================================================================== */
 
-const Traza = {
-  lineas: [],
-  limpiar() { this.lineas = []; },
-  // tipo: true = ok, false = falla, 'titulo', 'estado' o undefined (neutro)
-  agregar(texto, tipo) { this.lineas.push({ texto, tipo }); }
-};
-const t = (texto, tipo) => Traza.agregar(texto, tipo);
-
-// Corta "Validar requisitos" (marco break del DS01) e informa el motivo
-function falla(resultado, codigo, mensaje) {
-  t(`break [${codigo}] → error("${mensaje}")`, false);
-  return { ok: false, resultado, codigo, mensaje };
-}
-
 const InscripcionController = {
 
   // Mensajes 2 a 10: habilitación, carrera activa y materias
@@ -105,6 +91,9 @@ const InscripcionController = {
     est.agregarInscripcion(ins);
     t('43: est.agregarInscripcion(ins)');
     t(`44: comprobante(${ins.comprobante})`, true);
+    // La solicitud queda disponible para el Administrador (actor secundario de CU01)
+    Notificador.notificar('A', 'Nueva solicitud de inscripción',
+      `${est.nombreCorto()} pidió inscribirse a ${com.materia.nombre}, ${com.codigo}.`, '#/admin/inscripciones');
     return { ok: true, inscripcion: ins };
   }
 };

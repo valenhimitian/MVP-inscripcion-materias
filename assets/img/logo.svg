@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" role="img" aria-label="Cursada – Autogestión universitaria">
+  <rect width="64" height="64" rx="16" fill="#2645D6"/>
+  <g fill="#FFFFFF" fill-opacity=".28">
+    <rect x="12" y="12" width="11" height="11" rx="3"/><rect x="26.5" y="12" width="11" height="11" rx="3"/><rect x="41" y="12" width="11" height="11" rx="3"/>
+    <rect x="12" y="26.5" width="11" height="11" rx="3"/><rect x="41" y="26.5" width="11" height="11" rx="3"/>
+    <rect x="12" y="41" width="11" height="11" rx="3"/><rect x="26.5" y="41" width="11" height="11" rx="3"/><rect x="41" y="41" width="11" height="11" rx="3"/>
+  </g>
+  <rect x="26.5" y="26.5" width="11" height="11" rx="3" fill="#FFD84D"/>
+  <text x="80" y="44" font-family="'Bricolage Grotesque', 'Segoe UI', sans-serif" font-size="38" font-weight="700" fill="#16213E" letter-spacing="-1">cursada</text>
+</svg>

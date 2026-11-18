@@ -1,0 +1,43 @@
+/* =====================================================================
+   Base: reset, tipografía y accesibilidad
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--f-texto);
+  font-size: var(--t-md);
+  line-height: 1.5;
+  color: var(--tinta);
+  background: var(--papel);
+}
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: var(--t-2xl); font-weight: 700; }
+h2 { font-size: var(--t-lg); font-weight: 650; }
+h3 { font-size: var(--t-md); font-weight: 650; }
+p { margin: 0; }
+a { color: var(--birome); }
+button, input, select { font: inherit; color: inherit; }
+img, svg { display: block; }
+table { border-collapse: collapse; width: 100%; }
+
+:focus-visible { outline: 3px solid var(--birome); outline-offset: 2px; border-radius: 4px; }
+
+.oculto { display: none !important; }
+.solo-lector {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+.tenue { color: var(--grafito); }
+.chico { font-size: var(--t-sm); }
+
+.saltar {
+  position: absolute; left: var(--e4); top: -60px; z-index: 100;
+  background: var(--tinta); color: #fff; padding: var(--e2) var(--e4); border-radius: var(--r-control);
+}
+.saltar:focus { top: var(--e3); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+main:focus { outline: none; }

@@ -1,127 +1,115 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portal de Autogestión – Inscripción a Materias (MVP)</title>
-<link rel="stylesheet" href="css/estilos.css">
+<title>Cursada · Autogestión universitaria</title>
+<meta name="description" content="Cursada es el portal de autogestión universitaria: inscripciones, notas, asistencia, constancias y avisos para estudiantes, docentes y administración.">
+<meta name="theme-color" content="#2645D6">
+<meta property="og:title" content="Cursada · Autogestión universitaria">
+<meta property="og:description" content="Inscribite a materias y seguí tus solicitudes desde un solo lugar.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+<link rel="manifest" href="assets/site.webmanifest">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/componentes.css">
+<link rel="stylesheet" href="css/vistas.css">
 </head>
 <body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
 
-<header>
-  <h1>Portal de Autogestión - Universidad</h1>
-  <span class="sp"></span>
-  <span id="chip" class="chip oculto">&#128100; <span id="chipTxt"></span></span>
-</header>
-<nav class="no-print">
-  <button id="tab-est" class="act" onclick="mostrarVista('est')">Portal del estudiante</button>
-  <button id="tab-adm" onclick="mostrarVista('adm')">Panel de administración</button>
-  <button id="tab-esc" onclick="mostrarVista('esc')">Escenarios de prueba</button>
-  <span style="flex:1"></span>
-  <button onclick="alternarTraza()" id="btnTraza">Mostrar secuencia (DS01)</button>
-  <button onclick="reiniciar()">&#8634; Reiniciar datos</button>
-</nav>
+<!-- Pantalla de ingreso (autenticación simulada) -->
+<div id="vista-ingreso" class="oculto"></div>
 
-<main>
-<!-- =================== PORTAL DEL ESTUDIANTE =================== -->
-<section id="v-est">
- <div class="grid" id="grid">
-  <div>
-    <div class="card no-print">
-      <h2>Ingreso al portal (autenticación simulada)</h2>
-      <div class="fila">
-        <select id="selEstudiante"></select>
-        <button class="btn pri" onclick="ingresar()">Ingresar</button>
-        <button class="btn claro" id="btnSalir" onclick="salir()" disabled>Cerrar sesión</button>
-      </div>
-    </div>
+<!-- Aplicación autenticada -->
+<div id="vista-app" class="oculto">
+  <header class="barra">
+    <a class="marca" id="marcaInicio" href="#/inicio" aria-label="Cursada, ir al inicio">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><use href="#isotipo"/></svg>
+      <span class="marca-nombre">cursada</span>
+      <span class="marca-sub">Autogestión universitaria</span>
+    </a>
+    <span class="barra-espacio"></span>
+    <span class="barra-periodo" id="barraPeriodo"></span>
+    <label class="interruptor" title="Muestra la secuencia DS01 / DS02 y las herramientas de prueba">
+      <input type="checkbox" id="chkDemo" onchange="App.alternarDemo(this.checked)"> <span class="interruptor-txt">Modo demo</span>
+    </label>
+    <div id="campana"></div>
+    <div class="usuario" id="usuario"></div>
+    <button class="btn btn-secundario btn-chico" id="btnSalir" onclick="App.salir()">Salir</button>
+  </header>
 
-    <div id="zonaEstudiante" class="oculto">
-      <div id="exito"></div>
+  <div class="app" id="app">
+    <nav class="lateral" id="menu" aria-label="Menú principal"></nav>
 
-      <div class="card">
-        <h2>Contexto académico</h2>
-        <div class="kv" id="contexto"></div>
-      </div>
+    <main class="contenido" id="contenido" tabindex="-1"></main>
 
-      <div id="bloqueo"></div>
-
-      <div id="asistente">
-        <div class="pasos"><div id="p1">1. Materia</div><div id="p2">2. Comisión</div><div id="p3">3. Confirmación</div></div>
-
-        <div class="card">
-          <h2>Paso 1: Seleccione la Materia (solo materias de su carrera)</h2>
-          <select id="selMateria" onchange="elegirMateria()"></select>
+    <aside class="panel-traza oculto" id="panelTraza" aria-label="Secuencia ejecutada">
+      <header>
+        <div style="flex:1">
+          <h2 id="tituloTraza">Secuencia DS01</h2>
+          <p>Mensajes numerados igual que el diagrama</p>
         </div>
+        <button class="btn btn-secundario btn-chico" onclick="App.alternarDemo(false)">Cerrar</button>
+      </header>
+      <div class="traza" id="traza" aria-live="polite"></div>
+    </aside>
 
-        <div class="card" id="paso2">
-          <h2>Paso 2: Comisiones Disponibles</h2>
-          <div id="tablaComisiones" class="muted">Primero seleccione una materia.</div>
-          <div id="mensajes"></div>
-        </div>
-
-        <div class="card" id="paso3">
-          <h2>Paso 3: Resumen de la inscripción</h2>
-          <div id="resumen" class="muted">Se completa cuando la comisión elegida cumple todas las validaciones.</div>
-        </div>
-      </div>
-
-      <div class="card" id="misInscripciones">
-        <h2>Mis inscripciones (RF22 · RF23)</h2>
-        <div id="tablaMisInscripciones"></div>
-      </div>
-
-      <div class="card prueba no-print">
-        <h2>Panel de pruebas (solo para la demo)</h2>
-        <label class="muted" style="display:block;margin-bottom:6px"><input type="checkbox" id="chkOtraCarrera" onchange="cargarMaterias()"> Listar también materias de otras carreras, para probar la validación RN3 (E6.2)</label>
-        <button class="btn claro sm" id="btnConcurrencia" onclick="simularConcurrencia()" disabled>Simular que otros estudiantes ocupan los cupos restantes de la comisión elegida (E9)</button>
-      </div>
-    </div>
+    <footer class="pie">
+      <span>Cursada · MVP del Ecosistema Integral de Gestión Universitaria</span>
+      <span>Trabajo práctico de Diseño de Aplicaciones Web, UNLaM 2026. Datos ficticios.</span>
+    </footer>
   </div>
+</div>
 
-  <aside id="colTraza" class="oculto">
-    <div class="card">
-      <h2>Secuencia ejecutada (DS01)</h2>
-      <p class="muted" style="margin-top:0">Mensajes numerados igual que el diagrama de secuencia.</p>
-      <div class="traza" id="traza">Ingrese con un estudiante para ver la secuencia.</div>
-    </div>
-  </aside>
- </div>
-</section>
+<!-- Diálogo y notificaciones reutilizables -->
+<dialog class="dialogo" id="dialogo" aria-labelledby="dialogoTitulo"></dialog>
+<div class="notificaciones" id="notificaciones" role="status" aria-live="polite"></div>
 
-<!-- =================== ADMINISTRACIÓN =================== -->
-<section id="v-adm" class="oculto">
-  <div class="card">
-    <h2>Revisar solicitudes de inscripción</h2>
-    <p class="muted" style="margin-top:0">El Administrador es el actor secundario de CU01: recibe las solicitudes Pendientes y las aprueba o rechaza (DE01). Al rechazar se libera el cupo (RN8).</p>
-    <div id="tablaPendientes"></div>
-  </div>
-  <div class="card">
-    <h2>Comisiones (DE02)</h2>
-    <div id="tablaComisionesAdm"></div>
-  </div>
-</section>
+<!-- Isotipo reutilizable -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="isotipo" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="16" fill="#2645D6"/>
+    <g fill="#FFFFFF" fill-opacity=".28">
+      <rect x="12" y="12" width="11" height="11" rx="3"/><rect x="26.5" y="12" width="11" height="11" rx="3"/><rect x="41" y="12" width="11" height="11" rx="3"/>
+      <rect x="12" y="26.5" width="11" height="11" rx="3"/><rect x="41" y="26.5" width="11" height="11" rx="3"/>
+      <rect x="12" y="41" width="11" height="11" rx="3"/><rect x="26.5" y="41" width="11" height="11" rx="3"/><rect x="41" y="41" width="11" height="11" rx="3"/>
+    </g>
+    <rect x="26.5" y="26.5" width="11" height="11" rx="3" fill="#FFD84D"/>
+  </symbol>
+</svg>
 
-<!-- =================== ESCENARIOS =================== -->
-<section id="v-esc" class="oculto">
-  <div class="card">
-    <h2>Escenarios de prueba</h2>
-    <div class="esc"><b>1. Inscripción exitosa.</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-01 → Confirmar. Queda <span class="badge b-warn">Pendiente</span> con comprobante. En "Panel de administración" se aprueba (<span class="badge b-ok">Aprobada</span>) o se rechaza (<span class="badge b-err">Rechazada</span>, libera el cupo).</div>
-    <div class="esc"><b>2. Comisión sin cupo (E6.1).</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-02 (Completa).</div>
-    <div class="esc"><b>3. Comisión fuera de período (E6.4).</b> Iván Avila → Diseño de Aplicaciones Web/Móviles → COM-03 (Creada). Desde el Panel de administración se puede abrir su inscripción (DE02: Creada → Abierta).</div>
-    <div class="esc"><b>4. Ya inscripto (E6).</b> Iván Avila → Base de Datos I → COM-04 (ya cursa Base de Datos I en COM-02).</div>
-    <div class="esc"><b>5. Correlativas incumplidas (E6.3).</b> Iván Avila → Programación Web II → COM-01 (falta Programación Web I).</div>
-    <div class="esc"><b>6. Materia de otra carrera (E6.2).</b> Iván Avila → marcar en el Panel de pruebas "Listar también materias de otras carreras" → Análisis Matemático I → COM-01.</div>
-    <div class="esc"><b>7. Último cupo y concurrencia.</b> Iván Avila → Visualización e Interfaces → COM-01 (queda 1 cupo) → Confirmar: la comisión pasa a <span class="badge b-err">Completa</span>. Variante E9: antes de confirmar, usar "Simular que otros estudiantes ocupan los cupos restantes".</div>
-    <div class="esc"><b>8. Estudiante no habilitado (E2).</b> Tomás Herrera (Inhabilitado) o Lucía Fernández (Registrado, sin documentación).</div>
-    <div class="esc"><b>9. Carrera activa por Matrícula.</b> Camila Ruiz: egresó de Ingeniería en Informática y tiene matrícula activa en la Tecnicatura; el sistema usa getCarreraActiva().</div>
-  </div>
-</section>
-</main>
-
-<script src="js/modelo.js"></script>
-<script src="js/controlador.js"></script>
-<script src="js/datos.js"></script>
-<script src="js/pantalla.js"></script>
+<!-- «entity» Modelo de dominio -->
+<script src="js/modelo/enumeraciones.js"></script>
+<script src="js/modelo/entidades.js"></script>
+<!-- Servicios: notificaciones, correo, PDF y guardado -->
+<script src="js/servicios/notificaciones.js"></script>
+<script src="js/servicios/pdf.js"></script>
+<script src="js/servicios/repositorio.js"></script>
+<!-- «control» -->
+<script src="js/control/traza.js"></script>
+<script src="js/control/InscripcionController.js"></script>
+<script src="js/control/CalificacionController.js"></script>
+<script src="js/control/GestionController.js"></script>
+<!-- Datos de ejemplo -->
+<script src="js/datos/datos.js"></script>
+<!-- «boundary» Vistas -->
+<script src="js/vista/utilidades.js"></script>
+<script src="js/vista/grilla.js"></script>
+<script src="js/vista/VistaIngreso.js"></script>
+<script src="js/vista/estudiante/VistaEstudiante.js"></script>
+<script src="js/vista/estudiante/PantallaInscripcion.js"></script>
+<script src="js/vista/docente/VistaDocente.js"></script>
+<script src="js/vista/admin/VistaAdmin.js"></script>
+<script src="js/vista/VistaGuia.js"></script>
+<!-- Arranque, sesión y rutas -->
+<script src="js/app.js"></script>
 </body>
 </html>

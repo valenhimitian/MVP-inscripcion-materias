@@ -1,0 +1,49 @@
+/* =====================================================================
+   CURSADA · Tokens de marca
+   Azul birome (acción), amarillo resaltador (lo que el estudiante eligió),
+   tinta (texto) y papel (fondo). Estados con su propio par de colores.
+   ===================================================================== */
+:root {
+  /* Marca */
+  --birome: #2645D6;
+  --birome-osc: #1A33A8;
+  --birome-cl: #E6EBFF;
+  --resaltador: #FFD84D;
+  --resaltador-cl: #FFF4C7;
+  --tinta: #16213E;
+  --grafito: #5A6478;
+  --papel: #F5F7FB;
+  --blanco: #FFFFFF;
+  --linea: #DDE2EC;
+  --linea-suave: #EBEEF4;
+
+  /* Estados (DE01 / DE02 / DE03) */
+  --ok: #17663F;      --ok-bg: #DDF3E6;
+  --err: #A3231B;     --err-bg: #FCE4E1;
+  --warn: #7A4E00;    --warn-bg: #FFF0C2;
+  --info: #1A33A8;    --info-bg: #E6EBFF;
+  --neutro: #4A5366;  --neutro-bg: #E9ECF2;
+
+  /* Tipografía */
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-texto: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-codigo: "JetBrains Mono", Consolas, "Courier New", monospace;
+
+  /* Escala tipográfica (razón 1.25) */
+  --t-xs: .78rem;
+  --t-sm: .875rem;
+  --t-md: 1rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.563rem;
+  --t-2xl: 1.953rem;
+  --t-3xl: 2.8rem;
+
+  /* Espaciado y forma */
+  --e1: 4px; --e2: 8px; --e3: 12px; --e4: 16px; --e5: 24px; --e6: 32px; --e7: 48px;
+  --r-control: 8px;
+  --r-panel: 14px;
+  --sombra-flotante: 0 18px 40px -12px rgba(22, 33, 62, .28);
+
+  --ancho-lateral: 248px;
+  --alto-barra: 64px;
+}
