@@ -10,7 +10,7 @@ El documento [docs/Resumen-Cursada-MVP.pdf](docs/Resumen-Cursada-MVP.pdf) explic
 
 ## Paso a paso de la inscripción
 
-El documento [docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf](docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf) recorre el caso de uso CU01: el flujo básico y cada alternativo y excepción (E2, A2, A4, E6, E6.1 a E6.4, A8, E9), con cómo probarlo, el mensaje que muestra el sistema, capturas y los mensajes del DS01.
+El documento [docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf](docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf) resume en 2 páginas el caso de uso CU01: el flujo básico con los mensajes del DS01 y cada alternativo y excepción (E2, A2, A4, E6, E6.1 a E6.4, A8, E9) con cómo probarlo y qué muestra el sistema.
 
 ## Cómo ejecutarlo
 
