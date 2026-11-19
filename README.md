@@ -8,6 +8,10 @@ Cubre el caso de uso principal **CU01 – Inscribirse a Materia** (DS01) y el ca
 
 El documento [docs/Resumen-Cursada-MVP.pdf](docs/Resumen-Cursada-MVP.pdf) explica en 4 páginas toda la web: roles, flujos, validaciones, estructura y trazabilidad con la segunda entrega.
 
+## Paso a paso de la inscripción
+
+El documento [docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf](docs/CU01-Inscribirse-a-materia-paso-a-paso.pdf) recorre el caso de uso CU01: el flujo básico y cada alternativo y excepción (E2, A2, A4, E6, E6.1 a E6.4, A8, E9), con cómo probarlo, el mensaje que muestra el sistema, capturas y los mensajes del DS01.
+
 ## Cómo ejecutarlo
 
 No requiere instalación, servidor ni base de datos. Abrí `index.html` con cualquier navegador o publicalo en GitHub Pages.
